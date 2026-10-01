@@ -16,17 +16,7 @@ A modern, role-based Employee Management System built for managing enterprise op
 - **Date Handling:** Dayjs
 
 ### Backend
-- Modular REST API Architecture (Express / Node.js ready)
-
----
-
-## ⚙️ Prerequisites
-
-Ensure you have the following installed on your system before proceeding:
-
-- **Node.js:** `v18.x` or higher (v20+ recommended)
-- **npm:** `v9.x` or higher (comes bundled with Node.js)
-- **Git:** Latest version
+- Python FastAPI
 
 ---
 
@@ -35,7 +25,7 @@ Ensure you have the following installed on your system before proceeding:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Manasi-creator Employee-Management-System
 cd EMS
 ```
 

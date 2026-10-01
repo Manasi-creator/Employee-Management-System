@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Global Resets ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F5F5F7;
+  color: #171717;
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ─── Scrollbar Styling ──────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #D4D4D4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #A3A3A3;
+}
+
+/* ─── Focus Styles ───────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #4F5AE5;
+  outline-offset: 2px;
+}
+
+/* ─── Utility Classes ────────────────────────────────────────── */
+@layer components {
+  .page-container {
+    @apply p-6 max-w-screen-2xl mx-auto;
+  }
+
+  .card-surface {
+    @apply bg-white rounded-xl border border-neutral-200;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-neutral-900;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-neutral-500;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-neutral-900;
+  }
+
+  .stat-label {
+    @apply text-xs font-medium text-neutral-500 uppercase tracking-wider;
+  }
+
+  .table-container {
+    @apply bg-white rounded-xl border border-neutral-200 overflow-hidden;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* ─── Animation Classes ──────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.25s ease-out;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px;
+  }
+}
