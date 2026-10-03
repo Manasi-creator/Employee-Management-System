@@ -20,62 +20,68 @@ A modern, role-based Employee Management System built for managing enterprise op
 
 ---
 
-## 💻 Installation & Setup
+## Installation & Setup
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Manasi-creator Employee-Management-System
-cd EMS
+git clone https://github.com/Manasi-creator/Employee-Management-System.git
+cd Employee-Management-System
 ```
 
-### 2. Frontend Setup
+### 2. Backend Setup
 
-Navigate into the `frontend` directory:
+The FastAPI API runs under `/api/v1`. Python 3.13 is recommended. On Windows, open a PowerShell terminal at the repository root and run:
+
+```powershell
+cd backend
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Edit `backend/.env` with your database settings. By default, the backend connects to MySQL; create the `ems_db` database before starting the API. To use SQLite for local development instead, set `DATABASE_URL=sqlite:///./ems.db` in `backend/.env`.
+
+Set `JWT_SECRET` in `backend/.env` to a unique random value. 
+```
+Copy the output into `JWT_SECRET`. Do not commit or share the real `.env` file; the `.env.example` file contains placeholders only.
+
+From the `backend` directory, initialize or update the database schema and start the API:
+
+```powershell
+python -m alembic upgrade head
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+For an existing database, always apply pending migrations using `python -m alembic upgrade head` before using the app. Startup table creation does not add missing columns to existing tables.
+
+### 3. Frontend Setup
+
+Open a **second terminal** at the repository root:
 
 ```bash
 cd frontend
-```
-
-Install all required dependencies:
-
-```bash
 npm install
-```
-
-Configure environment variables:
-Create a `.env` file in the `frontend` folder (or copy from `.env.example`):
-
-```env
-VITE_API_BASE_URL=http://localhost:5000/api
-```
-
-Start the local development server:
-
-```bash
+cp .env.example .env
 npm run dev
 ```
 
-The application will launch at `http://localhost:5173` (or the next available port shown in your terminal).
+
+### 4. Demo Data (Optional)
+
+After the schema is initialized, activate the backend virtual environment and run this from the `backend` directory:
+
+```bash
+python -m scripts.seed
+```
 
 ---
 
-## 📜 Available Scripts
-
-Run the following commands inside the `frontend` directory:
-
-| Command | Action |
-| :--- | :--- |
-| `npm run dev` | Starts the Vite local development server with Hot Module Replacement (HMR). |
-| `npm run build` | Compiles TypeScript and builds the production-ready static assets in `dist/`. |
-| `npm run preview` | Previews the production build locally. |
-| `npm run lint` | Runs `oxlint` to check code quality and syntax compliance. |
-
----
 
 ## 🔑 Key Features & Role Portals
 
 - **HR Portal:** Manage employee directory, manager assignments, departments, designations, former employees, leave requests, and company projects.
-- **Manager Portal:** Oversee team members, review project allocations, and approve or reject team leave applications.
+- **Manager Portal:** Oversee team members, manage projects involving their direct reports, and approve or reject team leave applications.
 - **Employee Portal:** View personal profile, submit leave applications, check leave request statuses, and view assigned projects.
 - **Role Guards & Security:** Route protection for public, authenticated, and role-restricted views with mandatory password change enforcement.

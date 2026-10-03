@@ -10,9 +10,30 @@ lerna-debug.log*
 # Dependencies
 node_modules/
 
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python test, lint, and coverage caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
 # Build
 dist/
 dist-ssr/
+build/
+coverage/
 
 # Environment variables
 .env

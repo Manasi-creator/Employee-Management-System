@@ -49,21 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.data);
       storage.setUser(JSON.stringify(response.data));
     } catch {
-      // If backend is offline but a user session was saved locally, keep local session
-      const savedUser = storage.getUser();
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch {
-          storage.clear();
-          setToken(null);
-          setUser(null);
-        }
-      } else {
-        storage.clear();
-        setToken(null);
-        setUser(null);
-      }
+      storage.clear();
+      setToken(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -75,46 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /* ── Login ───────────────────────────────────────────────── */
   const login = async (data: LoginRequest) => {
-    try {
-      const response = await authApi.login(data);
-      const { access_token, user: loggedInUser } = response.data;
-      storage.setToken(access_token);
-      storage.setUser(JSON.stringify(loggedInUser));
-      setToken(access_token);
-      setUser(loggedInUser);
+    const response = await authApi.login(data);
+    const { access_token, user: loggedInUser } = response.data;
+    storage.setToken(access_token);
+    storage.setUser(JSON.stringify(loggedInUser));
+    setToken(access_token);
+    setUser(loggedInUser);
 
-      if (loggedInUser.is_first_login) {
-        navigate('/change-password', { replace: true });
-      } else {
-        const dashboardPath = getRoleDashboard(loggedInUser.role);
-        navigate(dashboardPath, { replace: true });
-      }
-    } catch (error) {
-      // Fallback for demo testing when backend is not running locally
-      const emailLower = data.email.toLowerCase();
-      let demoRole: Role = 'EMPLOYEE';
-      if (emailLower.includes('hr') || emailLower.includes('admin')) {
-        demoRole = 'HR';
-      } else if (emailLower.includes('manager') || emailLower.includes('lead')) {
-        demoRole = 'MANAGER';
-      }
-
-      const mockUser: User = {
-        id: 1,
-        email: data.email,
-        role: demoRole,
-        employee_id: 1,
-        is_first_login: false,
-        is_active: true,
-      };
-
-      const mockToken = 'demo-jwt-token-xyz';
-      storage.setToken(mockToken);
-      storage.setUser(JSON.stringify(mockUser));
-      setToken(mockToken);
-      setUser(mockUser);
-
-      const dashboardPath = getRoleDashboard(demoRole);
+    if (loggedInUser.is_first_login) {
+      navigate('/change-password', { replace: true });
+    } else {
+      const dashboardPath = getRoleDashboard(loggedInUser.role);
       navigate(dashboardPath, { replace: true });
     }
   };

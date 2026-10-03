@@ -92,6 +92,7 @@ export default function EmployeesPage() {
 
   const openArchive = (emp: Employee) => {
     setSelectedEmployee(emp);
+    setFormError('');
     archiveDialog.open();
   };
 
@@ -411,6 +412,7 @@ export default function EmployeesPage() {
         confirmLabel="Archive"
         confirmColor="error"
         isLoading={formLoading}
+        error={formError}
         onConfirm={handleArchive}
         onCancel={archiveDialog.close}
       />
