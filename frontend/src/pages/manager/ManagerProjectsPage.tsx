@@ -21,8 +21,12 @@ import { PageHeader, DataTable, SearchBar, StatusChip, FormDialog, LoadingSpinne
 import type { Column } from '../../components';
 import { projectApi, employeeApi } from '../../api';
 import type { Project, ProjectMember, Employee, ProjectStatus } from '../../types';
+import { getErrorMessage } from '../../utils';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ManagerProjectsPage() {
+  const { role } = useAuth();
+  const isHR = role === 'HR';
   const [projects, setProjects] = useState<Project[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -114,8 +118,8 @@ export default function ManagerProjectsPage() {
       }
       setProjectDialogOpen(false);
       fetchProjects();
-    } catch {
-      setError('Failed to save project.');
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +154,7 @@ export default function ManagerProjectsPage() {
     try {
       const [mRes, tRes] = await Promise.all([
         projectApi.getMembers(p.id),
-        employeeApi.getMyTeam({ page_size: 100 }),
+        isHR ? employeeApi.getAll({ page_size: 100 }) : employeeApi.getMyTeam({ page_size: 100 }),
       ]);
       setMembers(mRes.data);
       setTeamOptions(tRes.data.items);
@@ -174,8 +178,8 @@ export default function ManagerProjectsPage() {
       const res = await projectApi.getMembers(selectedProject.id);
       setMembers(res.data);
       setSuccessMsg('Member added to project.');
-    } catch {
-      setError('Failed to add member to project.');
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -187,8 +191,8 @@ export default function ManagerProjectsPage() {
       const res = await projectApi.getMembers(selectedProject.id);
       setMembers(res.data);
       setSuccessMsg('Member removed from project.');
-    } catch {
-      setError('Failed to remove member.');
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -232,8 +236,8 @@ export default function ManagerProjectsPage() {
   return (
     <Box>
       <PageHeader
-        title="Manager Projects"
-        subtitle="Manage team projects, assignments, and deliverables"
+        title={isHR ? 'Projects' : 'Manager Projects'}
+        subtitle={isHR ? 'Manage company projects and assignments' : 'Manage team projects, assignments, and deliverables'}
         action={
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
             Create Project

@@ -5,6 +5,7 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Alert,
 } from '@mui/material';
 
 interface ConfirmDialogProps {
@@ -15,6 +16,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   confirmColor?: 'primary' | 'error' | 'warning';
   isLoading?: boolean;
+  error?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -27,6 +29,7 @@ export default function ConfirmDialog({
   cancelLabel = 'Cancel',
   confirmColor = 'primary',
   isLoading,
+  error,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -41,6 +44,7 @@ export default function ConfirmDialog({
       <DialogTitle id="confirm-dialog-title">{title}</DialogTitle>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
+        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel} disabled={isLoading}>

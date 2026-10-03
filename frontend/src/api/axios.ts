@@ -1,10 +1,9 @@
 import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '../types';
-import { getMockResponse } from './mockData';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,10 +32,6 @@ api.interceptors.response.use(
     };
 
     if (!error.response) {
-      const mock = getMockResponse(error.config?.url || '');
-      if (mock) {
-        return Promise.resolve(mock as any);
-      }
       apiError.message = 'Network error. Please check your connection and try again.';
       return Promise.reject(apiError);
     }

@@ -29,10 +29,19 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = (demoEmail: string) => {
+  const handleDemoLogin = async (demoEmail: string) => {
+    const demoPassword = 'Welcome@123';
     setEmail(demoEmail);
-    setPassword('password123');
-    login({ email: demoEmail, password: 'password123' });
+    setPassword(demoPassword);
+    setError('');
+    setIsLoading(true);
+    try {
+      await login({ email: demoEmail, password: demoPassword });
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -124,6 +133,7 @@ export default function LoginPage() {
             <Button
               variant="outlined"
               size="small"
+              disabled={isLoading}
               onClick={() => handleDemoLogin('hr@ems.com')}
             >
               HR Admin
@@ -131,14 +141,16 @@ export default function LoginPage() {
             <Button
               variant="outlined"
               size="small"
-              onClick={() => handleDemoLogin('manager@ems.com')}
+              disabled={isLoading}
+              onClick={() => handleDemoLogin('fin.manager@ems.com')}
             >
               Manager
             </Button>
             <Button
               variant="outlined"
               size="small"
-              onClick={() => handleDemoLogin('employee@ems.com')}
+              disabled={isLoading}
+              onClick={() => handleDemoLogin('asha@ems.com')}
             >
               Employee
             </Button>
