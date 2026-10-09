@@ -152,9 +152,18 @@ export default function ManagerProjectsPage() {
     setMembersDialogOpen(true);
     setMembersLoading(true);
     try {
+      let deptId: number | undefined;
+      if (!isHR) {
+        try {
+          const profileRes = await employeeApi.getMyProfile();
+          deptId = profileRes.data.department_id;
+        } catch {
+          // ignore
+        }
+      }
       const [mRes, tRes] = await Promise.all([
         projectApi.getMembers(p.id),
-        isHR ? employeeApi.getAll({ page_size: 100 }) : employeeApi.getMyTeam({ page_size: 100 }),
+        employeeApi.getAll({ ...(deptId ? { department_id: deptId } : {}), page_size: 100 }),
       ]);
       setMembers(mRes.data);
       setTeamOptions(tRes.data.items);
@@ -213,21 +222,25 @@ export default function ManagerProjectsPage() {
       align: 'center',
       render: (row: Project) => (
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-          <Tooltip title="Manage Team Members">
+          <Tooltip title={isHR ? 'View Members' : 'Manage Team Members'}>
             <IconButton color="info" size="small" onClick={() => handleOpenMembers(row)}>
               <GroupAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Edit Project">
-            <IconButton color="primary" size="small" onClick={() => handleOpenEdit(row)}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete Project">
-            <IconButton color="error" size="small" onClick={() => handleOpenDelete(row)}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          {!isHR && (
+            <>
+              <Tooltip title="Edit Project">
+                <IconButton color="primary" size="small" onClick={() => handleOpenEdit(row)}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete Project">
+                <IconButton color="error" size="small" onClick={() => handleOpenDelete(row)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
         </Box>
       ),
     },
@@ -237,11 +250,13 @@ export default function ManagerProjectsPage() {
     <Box>
       <PageHeader
         title={isHR ? 'Projects' : 'Manager Projects'}
-        subtitle={isHR ? 'Manage company projects and assignments' : 'Manage team projects, assignments, and deliverables'}
+        subtitle={isHR ? 'View company projects and assignments' : 'Manage team projects, assignments, and deliverables'}
         action={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
-            Create Project
-          </Button>
+          !isHR ? (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
+              Create Project
+            </Button>
+          ) : undefined
         }
       />
 
@@ -368,40 +383,42 @@ export default function ManagerProjectsPage() {
           <LoadingSpinner label="Loading members..." />
         ) : (
           <Box sx={{ pt: 1 }}>
-            {/* Add Member Form */}
-            <Card variant="outlined" sx={{ p: 2, mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
-                Add Team Member to Project
-              </Typography>
-              <Box component="form" onSubmit={handleAddMember} sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <TextField
-                  select
-                  label="Select Team Member"
-                  value={addMemberForm.employee_id}
-                  onChange={(e) => setAddMemberForm({ ...addMemberForm, employee_id: e.target.value })}
-                  required
-                  size="small"
-                  sx={{ minWidth: 200, flex: 1 }}
-                >
-                  {teamOptions.map((t) => (
-                    <MenuItem key={t.id} value={t.id}>
-                      {t.first_name} {t.last_name} ({t.employee_code})
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  label="Role in Project"
-                  placeholder="e.g. Lead, Frontend Developer"
-                  value={addMemberForm.project_role}
-                  onChange={(e) => setAddMemberForm({ ...addMemberForm, project_role: e.target.value })}
-                  size="small"
-                  sx={{ minWidth: 200, flex: 1 }}
-                />
-                <Button type="submit" variant="contained" size="medium">
-                  Add Member
-                </Button>
-              </Box>
-            </Card>
+            {/* Add Member Form — only for managers */}
+            {!isHR && (
+              <Card variant="outlined" sx={{ p: 2, mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+                  Add Team Member to Project
+                </Typography>
+                <Box component="form" onSubmit={handleAddMember} sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <TextField
+                    select
+                    label="Select Team Member"
+                    value={addMemberForm.employee_id}
+                    onChange={(e) => setAddMemberForm({ ...addMemberForm, employee_id: e.target.value })}
+                    required
+                    size="small"
+                    sx={{ minWidth: 200, flex: 1 }}
+                  >
+                    {teamOptions.map((t) => (
+                      <MenuItem key={t.id} value={t.id}>
+                        {t.first_name} {t.last_name} ({t.employee_code})
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    label="Role in Project"
+                    placeholder="e.g. Lead, Frontend Developer"
+                    value={addMemberForm.project_role}
+                    onChange={(e) => setAddMemberForm({ ...addMemberForm, project_role: e.target.value })}
+                    size="small"
+                    sx={{ minWidth: 200, flex: 1 }}
+                  />
+                  <Button type="submit" variant="contained" size="medium">
+                    Add Member
+                  </Button>
+                </Box>
+              </Card>
+            )}
 
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
               Current Members ({members.length})
@@ -430,9 +447,11 @@ export default function ManagerProjectsPage() {
                         {m.project_role || 'Member'}
                       </Typography>
                     </Box>
-                    <IconButton color="error" size="small" onClick={() => handleRemoveMember(m.employee_id)}>
-                      <PersonRemoveIcon fontSize="small" />
-                    </IconButton>
+                    {!isHR && (
+                      <IconButton color="error" size="small" onClick={() => handleRemoveMember(m.employee_id)}>
+                        <PersonRemoveIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </Box>
                 </Grid>
               ))}

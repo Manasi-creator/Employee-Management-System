@@ -8,7 +8,7 @@ class ApiModel(BaseModel):
 
 
 class EmployeeCreate(ApiModel):
-    employee_code: str = Field(min_length=1, max_length=30)
+    employee_code: str | None = None
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
     email: EmailStr
