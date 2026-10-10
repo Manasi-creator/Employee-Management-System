@@ -1,4 +1,5 @@
 # app/models/user.py
+from app.models import Employee
 from datetime import datetime
 from sqlalchemy import BigInteger, String, Enum, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
