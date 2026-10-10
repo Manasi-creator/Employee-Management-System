@@ -1,6 +1,4 @@
 # app/models/leave.py
-from app.models import OldEmployee
-from app.models import Employee
 from datetime import date, datetime
 from decimal import Decimal
 from sqlalchemy import (BigInteger, String, Text, Date, DateTime, Enum, Integer,

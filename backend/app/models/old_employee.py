@@ -1,5 +1,4 @@
 # app/models/old_employee.py  (archive tables)
-from app.models import LeaveRequest
 from datetime import date, datetime
 from sqlalchemy import BigInteger, String, Text, Date, DateTime, Enum, JSON, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

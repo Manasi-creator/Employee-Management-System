@@ -1,10 +1,4 @@
 # app/models/employee.py
-from app.models import LeaveRequest
-from app.models import ProjectMember
-from app.models import Designation
-from app.models import Department
-from app.models import User
-from app.models import Employees
 from datetime import date
 from sqlalchemy import BigInteger, String, Text, Date, Enum, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship

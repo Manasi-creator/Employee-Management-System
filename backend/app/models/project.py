@@ -1,5 +1,4 @@
 # app/models/project.py
-from app.models import Employee
 from datetime import date, datetime
 from sqlalchemy import BigInteger, String, Text, Date, Enum, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

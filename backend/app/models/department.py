@@ -1,5 +1,4 @@
 # app/models/department.py
-from app.models import Employee
 from sqlalchemy import BigInteger, String, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, PrimaryKeyType, TimestampMixin, AuditMixin
