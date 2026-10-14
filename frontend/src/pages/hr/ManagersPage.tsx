@@ -36,6 +36,7 @@ export default function ManagersPage() {
   const [formData, setFormData] = useState<Partial<EmployeeCreateRequest>>({});
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [nextCode, setNextCode] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [deptFilter, setDeptFilter] = useState<string>('');
 
@@ -52,8 +53,16 @@ export default function ManagersPage() {
     setFormError('');
   };
 
-  const openCreate = () => {
+  const openCreate = async () => {
     resetForm();
+    try {
+      const res = await employeeApi.getNextCode();
+      const code = res.data.employee_code;
+      setNextCode(code);
+      setFormData((p) => ({ ...p, employee_code: code }));
+    } catch {
+      setNextCode('');
+    }
     createDialog.open();
   };
 
@@ -182,7 +191,7 @@ export default function ManagersPage() {
       <FormDialog open={createDialog.isOpen} title="Add Manager" onClose={() => { createDialog.close(); resetForm(); }} onSubmit={handleCreate} isLoading={formLoading} maxWidth="md">
         <Grid container spacing={2} sx={{ pt: 1 }}>
           {formError && <Grid size={{ xs: 12 }}><Alert severity="error">{formError}</Alert></Grid>}
-          <Grid size={{ xs: 12, sm: 6 }}><TextField label="Employee Code" fullWidth required value={formData.employee_code ?? ''} onChange={(e) => setFormData((p) => ({ ...p, employee_code: e.target.value }))} /></Grid>
+          <Grid size={{ xs: 12, sm: 6 }}><TextField label="Employee Code" fullWidth required value={formData.employee_code ?? nextCode} disabled slotProps={{ input: { readOnly: true } }} helperText="Auto-assigned" /></Grid>
           <Grid size={{ xs: 12, sm: 6 }}><TextField label="Email" type="email" fullWidth required value={formData.email ?? ''} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} /></Grid>
           <Grid size={{ xs: 12, sm: 6 }}><TextField label="First Name" fullWidth required value={formData.first_name ?? ''} onChange={(e) => setFormData((p) => ({ ...p, first_name: e.target.value }))} /></Grid>
           <Grid size={{ xs: 12, sm: 6 }}><TextField label="Last Name" fullWidth required value={formData.last_name ?? ''} onChange={(e) => setFormData((p) => ({ ...p, last_name: e.target.value }))} /></Grid>

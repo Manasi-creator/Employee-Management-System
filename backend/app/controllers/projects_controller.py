@@ -72,20 +72,8 @@ def get_project(db: Session, project_id: int, include_members: bool = False) -> 
 
 
 def ensure_project_management_access(db: Session, project: Project, user: User) -> None:
-    if user.role == Role.hr:
+    if user.role == Role.manager or project.created_by == user.id:
         return
-    if user.role == Role.manager and user.employee is not None:
-        manages_project = project.created_by == user.id or db.scalar(
-            select(ProjectMember.id)
-            .join(Employee, ProjectMember.employee_id == Employee.id)
-            .where(
-                ProjectMember.project_id == project.id,
-                Employee.manager_id == user.employee.id,
-            )
-            .limit(1)
-        ) is not None
-        if manages_project:
-            return
     raise HTTPException(status.HTTP_403_FORBIDDEN, "Permission denied")
 
 
@@ -155,21 +143,18 @@ def get_project_by_id(
     user: User = Depends(get_current_user),
 ):
     project = get_project(db, project_id, include_members=True)
-    if user.role != Role.hr and user.employee and not any(
-        member.employee_id == user.employee.id for member in project.members
-    ):
-        if user.role != Role.manager or not any(
-            member.employee.manager_id == user.employee.id for member in project.members
-        ):
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Permission denied")
-    return project_out(project, include_members=True)
+    if user.role in (Role.hr, Role.manager) or project.created_by == user.id:
+        return project_out(project, include_members=True)
+    if user.employee and any(member.employee_id == user.employee.id for member in project.members):
+        return project_out(project, include_members=True)
+    raise HTTPException(status.HTTP_403_FORBIDDEN, "Permission denied")
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_project(
     body: ProjectCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(Role.hr, Role.manager)),
+    user: User = Depends(require_role(Role.manager)),
 ):
     if user.role == Role.manager and user.employee is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Manager account has no employee profile")
@@ -193,7 +178,7 @@ def update_project(
     project_id: int,
     body: ProjectUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(Role.hr, Role.manager)),
+    user: User = Depends(require_role(Role.manager)),
 ):
     project = get_project(db, project_id)
     ensure_project_management_access(db, project, user)
@@ -213,7 +198,7 @@ def update_project(
 def delete_project(
     project_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(Role.hr, Role.manager)),
+    user: User = Depends(require_role(Role.manager)),
 ):
     project = get_project(db, project_id)
     ensure_project_management_access(db, project, user)
@@ -229,13 +214,11 @@ def get_project_members(
     user: User = Depends(get_current_user),
 ):
     project = get_project(db, project_id, include_members=True)
-    if user.role != Role.hr and user.employee and not any(
-        member.employee_id == user.employee.id
-        or (user.role == Role.manager and member.employee.manager_id == user.employee.id)
-        for member in project.members
-    ):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Permission denied")
-    return [member_out(member) for member in project.members]
+    if user.role in (Role.hr, Role.manager) or project.created_by == user.id:
+        return [member_out(member) for member in project.members]
+    if user.employee and any(member.employee_id == user.employee.id for member in project.members):
+        return [member_out(member) for member in project.members]
+    raise HTTPException(status.HTTP_403_FORBIDDEN, "Permission denied")
 
 
 @router.post("/{project_id}/members", status_code=status.HTTP_201_CREATED)
@@ -243,17 +226,14 @@ def add_project_member(
     project_id: int,
     body: ProjectMemberCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(Role.hr, Role.manager)),
+    user: User = Depends(require_role(Role.manager)),
 ):
     project = get_project(db, project_id)
     ensure_project_management_access(db, project, user)
     employee = db.get(Employee, body.employee_id)
     if employee is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Employee not found")
-    if user.role == Role.manager and (
-        user.employee is None or employee.manager_id != user.employee.id
-    ):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Managers can only assign their direct reports")
+
     member = ProjectMember(
         project_id=project_id,
         employee_id=body.employee_id,
@@ -278,7 +258,7 @@ def remove_project_member(
     project_id: int,
     employee_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(Role.hr, Role.manager)),
+    user: User = Depends(require_role(Role.manager)),
 ):
     project = get_project(db, project_id)
     ensure_project_management_access(db, project, user)
@@ -289,10 +269,7 @@ def remove_project_member(
     if member is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project member not found")
     employee = db.get(Employee, employee_id)
-    if user.role == Role.manager and (
-        user.employee is None or employee is None or employee.manager_id != user.employee.id
-    ):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Managers can only remove their direct reports")
+
     db.delete(member)
     commit_or_conflict(db)
     return {"message": "Project member removed successfully"}

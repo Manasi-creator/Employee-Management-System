@@ -150,6 +150,27 @@ def _validate_manager(db: Session, manager_id: int | None) -> None:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "manager_id must identify a manager")
 
 
+def generate_next_employee_code(db: Session) -> str:
+    emp_codes = db.scalars(select(Employee.employee_code)).all()
+    old_codes = db.scalars(select(OldEmployee.employee_code)).all()
+    max_num = -1
+    for code in list(emp_codes) + list(old_codes):
+        if code and code.startswith("EMP"):
+            digits = "".join(filter(str.isdigit, code[3:]))
+            if digits:
+                max_num = max(max_num, int(digits))
+    next_num = max_num + 1 if max_num >= 0 else 1
+    return f"EMP{next_num:03d}"
+
+
+@router.get("/employees/next-code")
+def get_next_employee_code(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(Role.hr)),
+):
+    return {"employee_code": generate_next_employee_code(db)}
+
+
 @router.get("/employees")
 def list_employees(
     page: int = 1,
@@ -159,10 +180,13 @@ def list_employees(
     department_id: int | None = None,
     designation_id: int | None = None,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(Role.hr)),
+    user: User = Depends(require_role(Role.hr, Role.manager)),
 ):
     stmt = _employee_query()
     count_stmt = select(func.count(Employee.id))
+    if user.role == Role.manager and department_id is None and user.employee is not None:
+        department_id = user.employee.department_id
+
     if search:
         pattern = f"%{search.strip()}%"
         criterion = or_(
@@ -292,9 +316,10 @@ def create_employee(
     )
     db.add(account)
     db.flush()
+    emp_code = (body.employee_code.strip() if body.employee_code and body.employee_code.strip() else generate_next_employee_code(db))
     employee = Employee(
         user_id=account.id,
-        employee_code=body.employee_code.strip(),
+        employee_code=emp_code,
         first_name=body.first_name.strip(),
         last_name=body.last_name.strip(),
         phone=body.phone,

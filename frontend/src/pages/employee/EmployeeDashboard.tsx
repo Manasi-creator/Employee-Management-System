@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Box, Grid, Card, CardContent, Typography, Button, Alert } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNoteOutlined';
 import FolderIcon from '@mui/icons-material/FolderOutlined';
-import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/PersonOutlined';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, StatCard, DataTable, StatusChip, LoadingSpinner } from '../../components';
@@ -71,11 +70,6 @@ export default function EmployeeDashboard() {
       <PageHeader
         title={`Welcome back, ${profile?.first_name || 'Employee'}!`}
         subtitle="Overview of your leave balances, assigned projects, and recent activity"
-        action={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/app/employee/leave')}>
-            Apply For Leave
-          </Button>
-        }
       />
 
       {error && (

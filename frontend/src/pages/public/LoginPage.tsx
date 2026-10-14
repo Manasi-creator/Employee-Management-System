@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Box, Card, CardContent, TextField, Button, Typography, Alert, Divider, Chip } from '@mui/material';
+import { Box, Card, CardContent, TextField, Button, Typography, Alert, Divider, Chip, IconButton, InputAdornment, } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../context';
 import { getErrorMessage } from '../../utils';
 
 export default function LoginPage() {
   const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,6 +23,7 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
+
     try {
       await login({ email, password });
     } catch (err) {
@@ -31,12 +35,17 @@ export default function LoginPage() {
 
   const handleDemoLogin = async (demoEmail: string) => {
     const demoPassword = 'Welcome@123';
+
     setEmail(demoEmail);
     setPassword(demoPassword);
     setError('');
     setIsLoading(true);
+
     try {
-      await login({ email: demoEmail, password: demoPassword });
+      await login({
+        email: demoEmail,
+        password: demoPassword,
+      });
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -76,20 +85,24 @@ export default function LoginPage() {
             >
               EM
             </Box>
+
             <Typography variant="h3" gutterBottom>
               Welcome back
             </Typography>
+
             <Typography variant="body2" color="text.secondary">
               Sign in to your Employee Management System
             </Typography>
           </Box>
 
+          {/* Error message */}
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
+          {/* Login form */}
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
               id="login-email"
@@ -103,17 +116,43 @@ export default function LoginPage() {
               required
               sx={{ mb: 2.5 }}
             />
+
             <TextField
               id="login-password"
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               fullWidth
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
               sx={{ mb: 3 }}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          showPassword ? 'Hide password' : 'Show password'
+                        }
+                        onClick={() =>
+                          setShowPassword((prev) => !prev)
+                        }
+                        edge="end"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
+
             <Button
               type="submit"
               variant="contained"
@@ -125,27 +164,39 @@ export default function LoginPage() {
             </Button>
           </Box>
 
+          {/* Demo login options */}
           <Divider sx={{ my: 3 }}>
             <Chip label="Quick Demo Login" size="small" />
           </Divider>
 
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
             <Button
               variant="outlined"
               size="small"
               disabled={isLoading}
               onClick={() => handleDemoLogin('hr@ems.com')}
             >
-              HR Admin
+              HR
             </Button>
+
             <Button
               variant="outlined"
               size="small"
               disabled={isLoading}
-              onClick={() => handleDemoLogin('fin.manager@ems.com')}
+              onClick={() =>
+                handleDemoLogin('fin.manager@ems.com')
+              }
             >
               Manager
             </Button>
+
             <Button
               variant="outlined"
               size="small"

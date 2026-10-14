@@ -24,6 +24,9 @@ export const employeeApi = {
   getMyTeam: (params?: QueryParams) =>
     api.get<PaginatedResponse<Employee>>(`${EMPLOYEES_PREFIX}/my-team`, { params }),
 
+  getNextCode: () =>
+    api.get<{ employee_code: string }>(`${EMPLOYEES_PREFIX}/next-code`),
+
   /* ── CRUD ─────────────────────────────────────────────────── */
   getById: (id: number) =>
     api.get<Employee>(`${EMPLOYEES_PREFIX}/${id}`),

@@ -1,0 +1,851 @@
+{
+	"info": {
+		"_postman_id": "e8d76a21-9981-4e2b-b62a-86c07153a7e5",
+		"name": "Employee Management System API",
+		"description": "Complete Postman collection for testing the Employee Management System FastAPI backend.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "bearer_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{bearer_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.access_token) {",
+									"    pm.collectionVariables.set('bearer_token', jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"hr@company.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Current User Me",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"current_password\": \"admin123\",\n  \"new_password\": \"newpassword123\",\n  \"confirm_password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Organization (Departments & Designations)",
+			"item": [
+				{
+					"name": "List Departments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/departments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Department",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Engineering\",\n  \"code\": \"ENG\",\n  \"description\": \"Software Engineering & IT Department\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/departments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments"
+							]
+						}
+					}
+				},
+				{
+					"name": "List Designations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/designations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"designations"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Designation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Senior Developer\",\n  \"code\": \"SR_DEV\",\n  \"department_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/designations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"designations"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Employees",
+			"item": [
+				{
+					"name": "List Employees",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees?page=1&page_size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "List Managers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/managers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"managers"
+							]
+						}
+					}
+				},
+				{
+					"name": "List My Team (Manager Only)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/my-team",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"my-team"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Next Employee Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/next-code",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"next-code"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Employee / Manager",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@company.com\",\n  \"password\": \"password123\",\n  \"role\": \"EMPLOYEE\",\n  \"phone\": \"1234567890\",\n  \"joining_date\": \"2026-01-15\",\n  \"department_id\": 1,\n  \"designation_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Employee Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Updated\",\n  \"phone\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/employees/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Archive Employee",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/1/archive",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"1",
+								"archive"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update My Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"9998887770\",\n  \"skills\": \"React, Python, FastAPI\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/employees/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"me"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Projects",
+			"item": [
+				{
+					"name": "List Projects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects?page=1&page_size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get My Projects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/my",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"my"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Project (Manager)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"EMS Redesign\",\n  \"description\": \"Upgrading EMS UI & API\",\n  \"start_date\": \"2026-02-01\",\n  \"end_date\": \"2026-06-30\",\n  \"status\": \"PLANNED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Project By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"EMS Redesign Updated\",\n  \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Project Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1",
+								"members"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Project Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_id\": 2,\n  \"project_role\": \"Lead Developer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/projects/1/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1",
+								"members"
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove Project Member",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1/members/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1",
+								"members",
+								"2"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Leave Requests",
+			"item": [
+				{
+					"name": "List Leave Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/types",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"types"
+							]
+						}
+					}
+				},
+				{
+					"name": "List My Leaves",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/my",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"my"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get My Leave Balance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/balance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"balance"
+							]
+						}
+					}
+				},
+				{
+					"name": "Apply For Leave",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leave_type_id\": 1,\n  \"start_date\": \"2026-03-01\",\n  \"end_date\": \"2026-03-03\",\n  \"reason\": \"Personal leave\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/leaves",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves"
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Leave",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/1/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"1",
+								"cancel"
+							]
+						}
+					}
+				},
+				{
+					"name": "List Team Leaves (Manager)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/team",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"team"
+							]
+						}
+					}
+				},
+				{
+					"name": "List Manager Leaves (HR)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/manager-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"manager-requests"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Leave By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leaves/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Action On Leave (Approve/Reject)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\",\n  \"remarks\": \"Approved by manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/leaves/1/action",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leaves",
+								"1",
+								"action"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Dashboards",
+			"item": [
+				{
+					"name": "HR Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/dashboard/hr",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dashboard",
+								"hr"
+							]
+						}
+					}
+				},
+				{
+					"name": "Manager Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/dashboard/manager",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dashboard",
+								"manager"
+							]
+						}
+					}
+				},
+				{
+					"name": "Employee Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/dashboard/employee",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dashboard",
+								"employee"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

@@ -36,6 +36,7 @@ export default function EmployeesPage() {
   const [formData, setFormData] = useState<Partial<EmployeeCreateRequest>>({});
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [nextCode, setNextCode] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [deptFilter, setDeptFilter] = useState<string>('');
 
@@ -58,8 +59,16 @@ export default function EmployeesPage() {
     setFormError('');
   };
 
-  const openCreate = () => {
+  const openCreate = async () => {
     resetForm();
+    try {
+      const res = await employeeApi.getNextCode();
+      const code = res.data.employee_code;
+      setNextCode(code);
+      setFormData((p) => ({ ...p, employee_code: code }));
+    } catch {
+      setNextCode('');
+    }
     createDialog.open();
   };
 
@@ -238,7 +247,7 @@ export default function EmployeesPage() {
       {isCreate && (
         <>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Employee Code" fullWidth required value={formData.employee_code ?? ''} onChange={(e) => setFormData((p) => ({ ...p, employee_code: e.target.value }))} />
+            <TextField label="Employee Code" fullWidth required value={formData.employee_code ?? nextCode} disabled slotProps={{ input: { readOnly: true } }} helperText="Auto-assigned" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField label="Email" type="email" fullWidth required value={formData.email ?? ''} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} />
