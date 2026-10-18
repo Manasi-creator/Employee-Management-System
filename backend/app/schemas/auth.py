@@ -6,21 +6,19 @@ class LoginRequest(BaseModel):
     password: str
 
 class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    id: str = Field(validation_alias="public_id")
     email: EmailStr
     role: Role
     is_first_login: bool
     is_active: bool
-    employee_id: int | None
+    employee_id: str | None
 
     @field_serializer("role")
     def serialize_role(self, role: Role) -> str:
         return role.value.upper()
 
 class LoginResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
     user: UserOut
 
 class ChangePasswordRequest(BaseModel):

@@ -1,13 +1,17 @@
 from datetime import date
+import os
 from sqlalchemy import select
 from app.db.session import SessionLocal
 from app.db.base import Role
+from app.core.config import settings
 from app.core.security import hash_password
 from app.models import (User, Department, Designation, Employee, LeaveType)
 
-TEMP_PASSWORD = "Welcome@123"   # everyone must change it on first login
+TEMP_PASSWORD = os.getenv("EMS_SEED_INITIAL_PASSWORD")
 
 def make_user(db, email, role):
+    if TEMP_PASSWORD is None:
+        raise RuntimeError("Set EMS_SEED_INITIAL_PASSWORD before creating demo accounts.")
     user = User(email=email, password_hash=hash_password(TEMP_PASSWORD),
                 role=role, is_first_login=True)
     db.add(user); db.flush()
@@ -22,6 +26,12 @@ def make_employee(db, user, code, first, last, dept, desig, manager=None):
     return emp
 
 def seed():
+    if settings.APP_ENV != "development":
+        raise RuntimeError("Demo seed data may only be created in development.")
+    if TEMP_PASSWORD is None or len(TEMP_PASSWORD) < 12:
+        raise RuntimeError(
+            "Set EMS_SEED_INITIAL_PASSWORD to a unique password of at least 12 characters."
+        )
     with SessionLocal() as db:
         if db.scalar(select(User).where(User.role == Role.hr)):
             print("Already seeded"); return

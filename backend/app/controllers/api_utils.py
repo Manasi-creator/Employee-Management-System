@@ -1,11 +1,17 @@
 from math import ceil
 from typing import Any
+from uuid import UUID
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.base import ProjectStatus
+
+
+def find_by_public_id(db: Session, model: type, public_id: UUID | str):
+    return db.scalar(select(model).where(model.public_id == str(public_id)))
 
 
 def enum_value(value: Any) -> str | None:

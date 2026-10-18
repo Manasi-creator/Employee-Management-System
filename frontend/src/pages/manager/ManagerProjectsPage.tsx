@@ -17,6 +17,9 @@ import EditIcon from '@mui/icons-material/EditOutlined';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import GroupAddIcon from '@mui/icons-material/GroupAddOutlined';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemoveOutlined';
+import SaveIcon from '@mui/icons-material/SaveOutlined';
+import CloseIcon from '@mui/icons-material/CloseOutlined';
+import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import { PageHeader, DataTable, SearchBar, StatusChip, FormDialog, LoadingSpinner } from '../../components';
 import type { Column } from '../../components';
 import { projectApi, employeeApi } from '../../api';
@@ -59,6 +62,8 @@ export default function ManagerProjectsPage() {
   const [teamOptions, setTeamOptions] = useState<Employee[]>([]);
   const [addMemberForm, setAddMemberForm] = useState({ employee_id: '', project_role: '' });
   const [membersLoading, setMembersLoading] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [memberRoleDraft, setMemberRoleDraft] = useState('');
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -149,24 +154,19 @@ export default function ManagerProjectsPage() {
   /* Members Management */
   const handleOpenMembers = async (p: Project) => {
     setSelectedProject(p);
+    setAddMemberForm({ employee_id: '', project_role: '' });
+    setEditingMemberId(null);
     setMembersDialogOpen(true);
     setMembersLoading(true);
     try {
-      let deptId: number | undefined;
-      if (!isHR) {
-        try {
-          const profileRes = await employeeApi.getMyProfile();
-          deptId = profileRes.data.department_id;
-        } catch {
-          // ignore
-        }
-      }
-      const [mRes, tRes] = await Promise.all([
-        projectApi.getMembers(p.id),
-        employeeApi.getAll({ ...(deptId ? { department_id: deptId } : {}), page_size: 100 }),
-      ]);
+      const mRes = await projectApi.getMembers(p.id);
       setMembers(mRes.data);
-      setTeamOptions(tRes.data.items);
+      if (isHR) {
+        setTeamOptions([]);
+      } else {
+        const tRes = await employeeApi.getMyTeam({ page: 1, page_size: 100 });
+        setTeamOptions(tRes.data.items);
+      }
     } catch {
       setError('Failed to load project members.');
     } finally {
@@ -180,7 +180,7 @@ export default function ManagerProjectsPage() {
     try {
       setError(null);
       await projectApi.addMember(selectedProject.id, {
-        employee_id: Number(addMemberForm.employee_id),
+        employee_id: addMemberForm.employee_id,
         project_role: addMemberForm.project_role || 'Developer',
       });
       setAddMemberForm({ employee_id: '', project_role: '' });
@@ -192,7 +192,7 @@ export default function ManagerProjectsPage() {
     }
   };
 
-  const handleRemoveMember = async (employeeId: number) => {
+  const handleRemoveMember = async (employeeId: string) => {
     if (!selectedProject) return;
     try {
       setError(null);
@@ -204,6 +204,29 @@ export default function ManagerProjectsPage() {
       setError(getErrorMessage(err));
     }
   };
+
+  const handleUpdateMemberRole = async (employeeId: string) => {
+    if (!selectedProject || !memberRoleDraft.trim()) return;
+    try {
+      setError(null);
+      await projectApi.updateMember(
+        selectedProject.id,
+        employeeId,
+        memberRoleDraft.trim(),
+      );
+      const res = await projectApi.getMembers(selectedProject.id);
+      setMembers(res.data);
+      setEditingMemberId(null);
+      setMemberRoleDraft('');
+      setSuccessMsg('Project role updated.');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  };
+
+  const unassignedTeamOptions = teamOptions.filter(
+    (employee) => !members.some((member) => member.employee_id === employee.id),
+  );
 
   const columns: Column<Project>[] = [
     { id: 'name', label: 'Project Name' },
@@ -224,7 +247,7 @@ export default function ManagerProjectsPage() {
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
           <Tooltip title={isHR ? 'View Members' : 'Manage Team Members'}>
             <IconButton color="info" size="small" onClick={() => handleOpenMembers(row)}>
-              <GroupAddIcon fontSize="small" />
+              {isHR ? <VisibilityIcon fontSize="small" /> : <GroupAddIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
           {!isHR && (
@@ -395,11 +418,12 @@ export default function ManagerProjectsPage() {
                     label="Select Team Member"
                     value={addMemberForm.employee_id}
                     onChange={(e) => setAddMemberForm({ ...addMemberForm, employee_id: e.target.value })}
-                    required
+                    required={unassignedTeamOptions.length > 0}
+                    disabled={unassignedTeamOptions.length === 0}
                     size="small"
                     sx={{ minWidth: 200, flex: 1 }}
                   >
-                    {teamOptions.map((t) => (
+                    {unassignedTeamOptions.map((t) => (
                       <MenuItem key={t.id} value={t.id}>
                         {t.first_name} {t.last_name} ({t.employee_code})
                       </MenuItem>
@@ -413,10 +437,20 @@ export default function ManagerProjectsPage() {
                     size="small"
                     sx={{ minWidth: 200, flex: 1 }}
                   />
-                  <Button type="submit" variant="contained" size="medium">
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="medium"
+                    disabled={unassignedTeamOptions.length === 0}
+                  >
                     Add Member
                   </Button>
                 </Box>
+                {unassignedTeamOptions.length === 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    All team members in your department are already assigned.
+                  </Typography>
+                )}
               </Card>
             )}
 
@@ -443,14 +477,74 @@ export default function ManagerProjectsPage() {
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
                         {m.employee ? `${m.employee.first_name} ${m.employee.last_name}` : `Emp #${m.employee_id}`}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {m.project_role || 'Member'}
-                      </Typography>
+                      {editingMemberId === m.employee_id ? (
+                        <TextField
+                          size="small"
+                          label="Project role"
+                          value={memberRoleDraft}
+                          onChange={(event) => setMemberRoleDraft(event.target.value)}
+                          sx={{ mt: 1, minWidth: 180 }}
+                        />
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          {m.project_role || 'Member'}
+                        </Typography>
+                      )}
                     </Box>
                     {!isHR && (
-                      <IconButton color="error" size="small" onClick={() => handleRemoveMember(m.employee_id)}>
-                        <PersonRemoveIcon fontSize="small" />
-                      </IconButton>
+                      <Box sx={{ display: 'flex' }}>
+                        {editingMemberId === m.employee_id ? (
+                          <>
+                            <Tooltip title="Save role">
+                              <span>
+                                <IconButton
+                                  color="primary"
+                                  size="small"
+                                  disabled={!memberRoleDraft.trim()}
+                                  onClick={() => handleUpdateMemberRole(m.employee_id)}
+                                >
+                                  <SaveIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                            <Tooltip title="Cancel">
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setEditingMemberId(null);
+                                  setMemberRoleDraft('');
+                                }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        ) : (
+                          <>
+                            <Tooltip title="Edit role">
+                              <IconButton
+                                color="primary"
+                                size="small"
+                                onClick={() => {
+                                  setEditingMemberId(m.employee_id);
+                                  setMemberRoleDraft(m.project_role);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Remove member">
+                              <IconButton
+                                color="error"
+                                size="small"
+                                onClick={() => handleRemoveMember(m.employee_id)}
+                              >
+                                <PersonRemoveIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                      </Box>
                     )}
                   </Box>
                 </Grid>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Card, CardContent, TextField, Button, Typography, Alert, Divider, Chip, IconButton, InputAdornment, } from '@mui/material';
+import { Box, Card, CardContent, TextField, Button, Typography, Alert, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../context';
 import { getErrorMessage } from '../../utils';
@@ -26,26 +26,6 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (demoEmail: string) => {
-    const demoPassword = 'Welcome@123';
-
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError('');
-    setIsLoading(true);
-
-    try {
-      await login({
-        email: demoEmail,
-        password: demoPassword,
-      });
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -164,48 +144,6 @@ export default function LoginPage() {
             </Button>
           </Box>
 
-          {/* Demo login options */}
-          <Divider sx={{ my: 3 }}>
-            <Chip label="Quick Demo Login" size="small" />
-          </Divider>
-
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 1,
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={isLoading}
-              onClick={() => handleDemoLogin('hr@ems.com')}
-            >
-              HR
-            </Button>
-
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={isLoading}
-              onClick={() =>
-                handleDemoLogin('fin.manager@ems.com')
-              }
-            >
-              Manager
-            </Button>
-
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={isLoading}
-              onClick={() => handleDemoLogin('asha@ems.com')}
-            >
-              Employee
-            </Button>
-          </Box>
         </CardContent>
       </Card>
     </Box>

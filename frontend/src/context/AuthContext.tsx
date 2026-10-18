@@ -2,55 +2,35 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { useNavigate } from 'react-router-dom';
 import type { User, Role, LoginRequest } from '../types';
 import { authApi } from '../api';
-import { storage } from '../utils';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   role: Role | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isFirstLogin: boolean;
   login: (data: LoginRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = storage.getUser();
-    if (!saved) return null;
-    try {
-      return JSON.parse(saved);
-    } catch {
-      return null;
-    }
-  });
-  const [token, setToken] = useState<string | null>(storage.getToken());
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = !!user;
   const role = user?.role ?? null;
   const isFirstLogin = user?.is_first_login ?? false;
 
   /* ── Restore session on mount ────────────────────────────── */
   const restoreSession = useCallback(async () => {
-    const savedToken = storage.getToken();
-    if (!savedToken) {
-      setIsLoading(false);
-      return;
-    }
     try {
-      setToken(savedToken);
       const response = await authApi.getMe();
-      setUser(response.data);
-      storage.setUser(JSON.stringify(response.data));
+      setUser(response.data ?? null);
     } catch {
-      storage.clear();
-      setToken(null);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -58,16 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
     restoreSession();
   }, [restoreSession]);
 
   /* ── Login ───────────────────────────────────────────────── */
   const login = async (data: LoginRequest) => {
     const response = await authApi.login(data);
-    const { access_token, user: loggedInUser } = response.data;
-    storage.setToken(access_token);
-    storage.setUser(JSON.stringify(loggedInUser));
-    setToken(access_token);
+    const loggedInUser = response.data.user;
     setUser(loggedInUser);
 
     if (loggedInUser.is_first_login) {
@@ -79,10 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   /* ── Logout ──────────────────────────────────────────────── */
-  const logout = useCallback(() => {
-    authApi.logout().catch(() => {});
-    storage.clear();
-    setToken(null);
+  const logout = useCallback(async () => {
+    await authApi.logout();
     setUser(null);
     navigate('/login', { replace: true });
   }, [navigate]);
@@ -90,14 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /* ── Update User ─────────────────────────────────────────── */
   const updateUser = useCallback((updatedUser: User) => {
     setUser(updatedUser);
-    storage.setUser(JSON.stringify(updatedUser));
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
         role,
         isAuthenticated,
         isLoading,

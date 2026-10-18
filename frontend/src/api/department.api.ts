@@ -10,15 +10,15 @@ export const departmentApi = {
   getList: () =>
     api.get<Department[]>(`${PREFIX}/list`),
 
-  getById: (id: number) =>
+  getById: (id: string) =>
     api.get<Department>(`${PREFIX}/${id}`),
 
   create: (data: DepartmentCreateRequest) =>
     api.post<Department>(PREFIX, data),
 
-  update: (id: number, data: DepartmentUpdateRequest) =>
+  update: (id: string, data: DepartmentUpdateRequest) =>
     api.put<Department>(`${PREFIX}/${id}`, data),
 
-  delete: (id: number) =>
+  delete: (id: string) =>
     api.delete<{ message: string }>(`${PREFIX}/${id}`),
 };

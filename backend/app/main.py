@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.controllers import auth_controller
 from app.controllers import (
@@ -9,23 +10,46 @@ from app.controllers import (
     projects_controller,
 )
 from app.core.config import settings
-from app.db.base import Base
-from app.db.session import engine
 
-app = FastAPI(title="EMS API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+is_production = settings.APP_ENV == "production"
+app = FastAPI(
+    title="EMS API",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
 )
 
 
-@app.on_event("startup")
-def startup() -> None:
-    Base.metadata.create_all(bind=engine)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+    if not is_production
+    else None,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
+
+@app.middleware("http")
+async def security_headers_and_csrf(request: Request, call_next):
+    if request.method not in {"GET", "HEAD", "OPTIONS"} and settings.AUTH_COOKIE_NAME in request.cookies:
+        origin = request.headers.get("origin")
+        fetch_site = request.headers.get("sec-fetch-site")
+        if origin is None or origin.rstrip("/") not in settings.cors_origins or fetch_site == "cross-site":
+            response = JSONResponse(status_code=403, content={"detail": "Request origin is not allowed"})
+        else:
+            response = await call_next(request)
+    else:
+        response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 API_PREFIX = "/api/v1"

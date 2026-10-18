@@ -64,7 +64,7 @@ def manager_dashboard(db: Session = Depends(get_db), user: User = Depends(requir
         )
     ) or 0
     rows = db.execute(
-        select(Project.id, Project.name, Project.status, func.count(ProjectMember.id))
+        select(Project.public_id, Project.name, Project.status, func.count(ProjectMember.id))
         .join(ProjectMember)
         .join(Employee, ProjectMember.employee_id == Employee.id)
         .where(Employee.manager_id == employee_id)

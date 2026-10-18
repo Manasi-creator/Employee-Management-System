@@ -15,6 +15,7 @@ import LogoutIcon from '@mui/icons-material/LogoutOutlined';
 import LockResetIcon from '@mui/icons-material/LockResetOutlined';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 import { useAuth } from '../../context';
 import { getInitials } from '../../utils';
 import { DRAWER_WIDTH } from './Sidebar';
@@ -25,6 +26,7 @@ interface TopBarProps {
 
 export default function TopBar({ onMenuToggle }: TopBarProps) {
   const { user, logout } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -108,7 +110,9 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           <MenuItem
             onClick={() => {
               handleMenuClose();
-              logout();
+              void logout().catch(() => {
+                enqueueSnackbar('Could not log out. Check your connection and try again.', { variant: 'error' });
+              });
             }}
           >
             <ListItemIcon>

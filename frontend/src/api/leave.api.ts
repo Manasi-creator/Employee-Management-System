@@ -26,14 +26,14 @@ export const leaveApi = {
   getMyBalance: () =>
     api.get<LeaveBalance[]>(`${PREFIX}/balance`),
 
-  cancel: (id: number) =>
+  cancel: (id: string) =>
     api.post<LeaveRequest>(`${PREFIX}/${id}/cancel`),
 
   /* ── Manager: team leaves ─────────────────────────────────── */
   getTeamLeaves: (params?: QueryParams) =>
     api.get<PaginatedResponse<LeaveRequest>>(`${PREFIX}/team`, { params }),
 
-  actionLeave: (id: number, data: LeaveActionRequest) =>
+  actionLeave: (id: string, data: LeaveActionRequest) =>
     api.post<LeaveRequest>(`${PREFIX}/${id}/action`, data),
 
   /* ── HR: manager leaves ───────────────────────────────────── */
@@ -41,6 +41,6 @@ export const leaveApi = {
     api.get<PaginatedResponse<LeaveRequest>>(`${PREFIX}/manager-requests`, { params }),
 
   /* ── General ──────────────────────────────────────────────── */
-  getById: (id: number) =>
+  getById: (id: string) =>
     api.get<LeaveRequest>(`${PREFIX}/${id}`),
 };

@@ -20,25 +20,25 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
-def create_access_token(user_id: int, role: str) -> str:
+def create_access_token(public_id: str, role: str) -> str:
     now = datetime.now(timezone.utc)
     expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
-        "sub": str(user_id),
+        "sub": public_id,
         "role": role,
         "iss": TOKEN_ISSUER,
         "type": TOKEN_TYPE,
         "iat": now,
         "exp": expire,
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    return jwt.encode(payload, settings.JWT_SECRET.get_secret_value(), algorithm=settings.JWT_ALGORITHM)
 
 
 def decode_token(token: str) -> dict | None:
     try:
         payload = jwt.decode(
             token,
-            settings.JWT_SECRET,
+            settings.JWT_SECRET.get_secret_value(),
             algorithms=[settings.JWT_ALGORITHM],
             issuer=TOKEN_ISSUER,
             options={"require_exp": True, "require_iat": True, "require_sub": True},
