@@ -62,7 +62,7 @@ export default function MyLeavePage() {
       setSubmitting(true);
       setError(null);
       await leaveApi.apply({
-        leave_type_id: Number(formData.leave_type_id),
+        leave_type_id: formData.leave_type_id,
         start_date: formData.start_date,
         end_date: formData.end_date,
         reason: formData.reason,
@@ -78,7 +78,7 @@ export default function MyLeavePage() {
     }
   };
 
-  const handleCancelLeave = async (id: number) => {
+  const handleCancelLeave = async (id: string) => {
     try {
       setError(null);
       await leaveApi.cancel(id);

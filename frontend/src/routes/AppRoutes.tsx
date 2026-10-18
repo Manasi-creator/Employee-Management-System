@@ -11,7 +11,7 @@ import {
   DesignationsPage,
   HRLeavePage,
   HRProjectsPage,
-  FormerEmployeesPage,
+  ArchivedEmployeesPage,
   HRProfilePage,
   ManagerDashboard,
   TeamEmployeesPage,
@@ -114,12 +114,16 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path="hr/former-employees"
+          path="hr/archived-employees"
           element={
             <RoleGuard allowedRoles={['HR']}>
-              <FormerEmployeesPage />
+              <ArchivedEmployeesPage />
             </RoleGuard>
           }
+        />
+        <Route
+          path="hr/former-employees"
+          element={<Navigate to="/app/hr/archived-employees" replace />}
         />
         <Route
           path="hr/profile"

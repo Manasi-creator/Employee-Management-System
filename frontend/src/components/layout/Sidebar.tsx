@@ -43,7 +43,7 @@ function getNavItems(role: Role): NavItem[] {
         { label: 'Designations', path: '/app/hr/designations', icon: <BadgeIcon /> },
         { label: 'Leave Requests', path: '/app/hr/leave', icon: <EventNoteIcon /> },
         { label: 'Projects', path: '/app/hr/projects', icon: <FolderIcon /> },
-        { label: 'Former Employees', path: '/app/hr/former-employees', icon: <ArchiveIcon /> },
+        { label: 'Archived Employees', path: '/app/hr/archived-employees', icon: <ArchiveIcon /> },
         { label: 'Profile', path: '/app/hr/profile', icon: <PersonIcon /> },
       ];
     case 'MANAGER':

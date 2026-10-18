@@ -2,9 +2,9 @@
 from datetime import date
 from sqlalchemy import BigInteger, String, Text, Date, Enum, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base, PrimaryKeyType, TimestampMixin, AuditMixin, Gender, EmployeeStatus
+from app.db.base import Base, PrimaryKeyType, PublicIdMixin, TimestampMixin, AuditMixin, Gender, EmployeeStatus
 
-class Employee(Base, TimestampMixin, AuditMixin):
+class Employee(Base, PublicIdMixin, TimestampMixin, AuditMixin):
     __tablename__ = "employees"
     id: Mapped[int] = mapped_column(PrimaryKeyType, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
@@ -12,6 +12,7 @@ class Employee(Base, TimestampMixin, AuditMixin):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(20))
+    phone_country_code: Mapped[str | None] = mapped_column(String(4))
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     gender: Mapped[Gender | None] = mapped_column(Enum(Gender))
     address: Mapped[str | None] = mapped_column(Text)

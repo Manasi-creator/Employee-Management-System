@@ -2,9 +2,9 @@
 from datetime import date, datetime
 from sqlalchemy import BigInteger, String, Text, Date, Enum, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base, PrimaryKeyType, TimestampMixin, ProjectStatus
+from app.db.base import Base, PrimaryKeyType, PublicIdMixin, TimestampMixin, ProjectStatus
 
-class Project(Base, TimestampMixin):
+class Project(Base, PublicIdMixin, TimestampMixin):
     __tablename__ = "projects"
     id: Mapped[int] = mapped_column(PrimaryKeyType, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150))
@@ -16,8 +16,9 @@ class Project(Base, TimestampMixin):
 
     members: Mapped[list["ProjectMember"]] = relationship(
         back_populates="project", cascade="all, delete-orphan")
+    created_by_user: Mapped["User | None"] = relationship(foreign_keys=[created_by])
 
-class ProjectMember(Base):   # mapper table
+class ProjectMember(Base, PublicIdMixin):   # mapper table
     __tablename__ = "project_members"
     __table_args__ = (UniqueConstraint("project_id", "employee_id", name="uq_project_employee"),)
     id: Mapped[int] = mapped_column(PrimaryKeyType, primary_key=True, autoincrement=True)

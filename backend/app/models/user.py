@@ -2,9 +2,9 @@
 from datetime import datetime
 from sqlalchemy import BigInteger, String, Enum, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base, PrimaryKeyType, TimestampMixin, Role
+from app.db.base import Base, PrimaryKeyType, PublicIdMixin, TimestampMixin, Role
 
-class User(Base, TimestampMixin):
+class User(Base, PublicIdMixin, TimestampMixin):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(PrimaryKeyType, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
@@ -18,5 +18,5 @@ class User(Base, TimestampMixin):
         back_populates="user", foreign_keys="Employee.user_id", uselist=False)
 
     @property
-    def employee_id(self) -> int | None:
-        return self.employee.id if self.employee else None
+    def employee_id(self) -> str | None:
+        return self.employee.public_id if self.employee else None

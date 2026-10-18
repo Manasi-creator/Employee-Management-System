@@ -7,18 +7,18 @@ export const designationApi = {
   getAll: (params?: QueryParams) =>
     api.get<PaginatedResponse<Designation>>(PREFIX, { params }),
 
-  getList: (departmentId?: number) =>
+  getList: (departmentId?: string) =>
     api.get<Designation[]>(`${PREFIX}/list`, { params: departmentId ? { department_id: departmentId } : undefined }),
 
-  getById: (id: number) =>
+  getById: (id: string) =>
     api.get<Designation>(`${PREFIX}/${id}`),
 
   create: (data: DesignationCreateRequest) =>
     api.post<Designation>(PREFIX, data),
 
-  update: (id: number, data: DesignationUpdateRequest) =>
+  update: (id: string, data: DesignationUpdateRequest) =>
     api.put<Designation>(`${PREFIX}/${id}`, data),
 
-  delete: (id: number) =>
+  delete: (id: string) =>
     api.delete<{ message: string }>(`${PREFIX}/${id}`),
 };

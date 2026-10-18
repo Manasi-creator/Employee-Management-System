@@ -1,7 +1,7 @@
 export { default as DepartmentsPage } from './DepartmentsPage';
 export { default as DesignationsPage } from './DesignationsPage';
 export { default as EmployeesPage } from './EmployeesPage';
-export { default as FormerEmployeesPage } from './FormerEmployeesPage';
+export { default as ArchivedEmployeesPage } from './ArchivedEmployeesPage';
 export { default as HRDashboard } from './HRDashboard';
 export { default as HRLeavePage } from './HRLeavePage';
 export { default as HRProfilePage } from './HRProfilePage';

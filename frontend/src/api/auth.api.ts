@@ -8,13 +8,11 @@ export const authApi = {
     api.post<LoginResponse>(`${AUTH_PREFIX}/login`, data),
 
   getMe: () =>
-    api.get<User>(`${AUTH_PREFIX}/me`),
+    api.get<User | null>(`${AUTH_PREFIX}/me`),
 
   changePassword: (data: ChangePasswordRequest) =>
     api.post<{ message: string }>(`${AUTH_PREFIX}/change-password`, data),
 
   logout: () =>
-    api.post<{ message: string }>(`${AUTH_PREFIX}/logout`).catch(() => {
-      // Logout should always succeed on client side
-    }),
+    api.post<{ message: string }>(`${AUTH_PREFIX}/logout`),
 };

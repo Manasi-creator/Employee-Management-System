@@ -7,4 +7,4 @@ export { default as SearchBar } from './common/SearchBar';
 export { default as FilterBar } from './common/FilterBar';
 export type { FilterConfig, FilterOption } from './common/FilterBar';
 export { LoadingState, LoadingState as LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './feedback';
-export { FormDialog } from './forms';
+export { FormDialog, PhoneFields } from './forms';

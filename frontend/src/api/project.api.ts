@@ -16,26 +16,31 @@ export const projectApi = {
   getAll: (params?: QueryParams) =>
     api.get<PaginatedResponse<Project>>(PREFIX, { params }),
 
-  getById: (id: number) =>
+  getById: (id: string) =>
     api.get<Project>(`${PREFIX}/${id}`),
 
   create: (data: ProjectCreateRequest) =>
     api.post<Project>(PREFIX, data),
 
-  update: (id: number, data: ProjectUpdateRequest) =>
+  update: (id: string, data: ProjectUpdateRequest) =>
     api.put<Project>(`${PREFIX}/${id}`, data),
 
-  delete: (id: number) =>
+  delete: (id: string) =>
     api.delete<{ message: string }>(`${PREFIX}/${id}`),
 
   /* ── Members ──────────────────────────────────────────────── */
-  getMembers: (projectId: number) =>
+  getMembers: (projectId: string) =>
     api.get<ProjectMember[]>(`${PREFIX}/${projectId}/members`),
 
-  addMember: (projectId: number, data: ProjectMemberAddRequest) =>
+  addMember: (projectId: string, data: ProjectMemberAddRequest) =>
     api.post<ProjectMember>(`${PREFIX}/${projectId}/members`, data),
 
-  removeMember: (projectId: number, employeeId: number) =>
+  updateMember: (projectId: string, employeeId: string, projectRole: string) =>
+    api.put<ProjectMember>(`${PREFIX}/${projectId}/members/${employeeId}`, {
+      project_role: projectRole,
+    }),
+
+  removeMember: (projectId: string, employeeId: string) =>
     api.delete<{ message: string }>(`${PREFIX}/${projectId}/members/${employeeId}`),
 
   /* ── Employee: assigned projects ──────────────────────────── */

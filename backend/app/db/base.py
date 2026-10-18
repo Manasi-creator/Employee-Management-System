@@ -1,10 +1,20 @@
 import enum
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, func
+from uuid import uuid4
+
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
 
 class Base(DeclarativeBase):
     pass
+
+class PublicIdMixin:
+    public_id: Mapped[str] = mapped_column(
+        String(36),
+        unique=True,
+        nullable=False,
+        default=lambda: str(uuid4()),
+    )
 
 PrimaryKeyType = BigInteger().with_variant(Integer, "sqlite")
 

@@ -12,11 +12,12 @@ import {
   StatusChip,
   ConfirmDialog,
   FormDialog,
+  PhoneFields,
 } from '../../components';
 import type { Column, FilterConfig } from '../../components';
 import { employeeApi, departmentApi, designationApi } from '../../api';
 import { usePaginatedApi, useDisclosure } from '../../hooks';
-import { fullName, formatDate, getErrorMessage } from '../../utils';
+import { fullName, formatDate, formatPhone, getErrorMessage, isValidCountryCode, isValidPhone } from '../../utils';
 import type { Employee, EmployeeCreateRequest, EmployeeUpdateRequest, Department, Designation } from '../../types';
 
 export default function EmployeesPage() {
@@ -36,7 +37,6 @@ export default function EmployeesPage() {
   const [formData, setFormData] = useState<Partial<EmployeeCreateRequest>>({});
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
-  const [nextCode, setNextCode] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [deptFilter, setDeptFilter] = useState<string>('');
 
@@ -47,10 +47,17 @@ export default function EmployeesPage() {
       .catch(() => {});
   }, []);
 
-  const loadDesignations = (deptId: number) => {
+  const loadDesignations = (deptId: string, savedDesignation?: Designation) => {
     designationApi
       .getAll({ department_id: deptId, page_size: 100 })
-      .then((res) => setDesignations(res.data.items))
+      .then((res) => {
+        const items = res.data.items;
+        setDesignations(
+          savedDesignation && !items.some((item) => item.id === savedDesignation.id)
+            ? [...items, savedDesignation]
+            : items,
+        );
+      })
       .catch(() => {});
   };
 
@@ -59,16 +66,8 @@ export default function EmployeesPage() {
     setFormError('');
   };
 
-  const openCreate = async () => {
+  const openCreate = () => {
     resetForm();
-    try {
-      const res = await employeeApi.getNextCode();
-      const code = res.data.employee_code;
-      setNextCode(code);
-      setFormData((p) => ({ ...p, employee_code: code }));
-    } catch {
-      setNextCode('');
-    }
     createDialog.open();
   };
 
@@ -78,6 +77,7 @@ export default function EmployeesPage() {
       first_name: emp.first_name,
       last_name: emp.last_name,
       phone: emp.phone,
+      country_code: emp.country_code ?? '',
       date_of_birth: emp.date_of_birth,
       gender: emp.gender,
       address: emp.address,
@@ -89,7 +89,7 @@ export default function EmployeesPage() {
       manager_id: emp.manager_id,
       status: emp.status,
     });
-    if (emp.department_id) loadDesignations(emp.department_id);
+    if (emp.department_id) loadDesignations(emp.department_id, emp.designation);
     setFormError('');
     editDialog.open();
   };
@@ -106,6 +106,18 @@ export default function EmployeesPage() {
   };
 
   const handleCreate = async () => {
+    if (!formData.password || formData.password.length < 8) {
+      setFormError('Set an initial password with at least 8 characters.');
+      return;
+    }
+    if (!formData.gender) {
+      setFormError('Select a gender.');
+      return;
+    }
+    if (!isValidCountryCode(formData.country_code ?? '') || !isValidPhone(formData.phone ?? '')) {
+      setFormError('Enter a valid country code and a 10-digit phone number using digits only.');
+      return;
+    }
     setFormLoading(true);
     setFormError('');
     try {
@@ -121,10 +133,35 @@ export default function EmployeesPage() {
 
   const handleUpdate = async () => {
     if (!selectedEmployee) return;
+    if (!formData.gender) {
+      setFormError('Select a gender.');
+      return;
+    }
+    const phoneChanged =
+      formData.phone !== selectedEmployee.phone ||
+      (formData.country_code ?? '') !== (selectedEmployee.country_code ?? '');
+    if (phoneChanged && (!isValidCountryCode(formData.country_code ?? '') || !isValidPhone(formData.phone ?? ''))) {
+      setFormError('Enter a valid country code and a 10-digit phone number using digits only.');
+      return;
+    }
     setFormLoading(true);
     setFormError('');
     try {
-      await employeeApi.update(selectedEmployee.id, formData as EmployeeUpdateRequest);
+      const updateData = { ...formData };
+      if (!updateData.joining_date) delete updateData.joining_date;
+      if (!updateData.date_of_birth) delete updateData.date_of_birth;
+      if (
+        updateData.department_id === selectedEmployee.department_id &&
+        updateData.designation_id === selectedEmployee.designation_id
+      ) {
+        delete updateData.department_id;
+        delete updateData.designation_id;
+      }
+      if (!updateData.country_code && updateData.phone === selectedEmployee.phone) {
+        delete updateData.phone;
+        delete updateData.country_code;
+      }
+      await employeeApi.update(selectedEmployee.id, updateData as EmployeeUpdateRequest);
       editDialog.close();
       paginated.refresh();
     } catch (err) {
@@ -159,7 +196,7 @@ export default function EmployeesPage() {
       ],
       onChange: (val) => {
         setStatusFilter(val);
-        paginated.setFilters({ status: val || undefined, department_id: deptFilter ? Number(deptFilter) : undefined });
+        paginated.setFilters({ status: val || undefined, department_id: deptFilter || undefined });
       },
     },
     {
@@ -169,7 +206,7 @@ export default function EmployeesPage() {
       options: departments.map((d) => ({ label: d.name, value: String(d.id) })),
       onChange: (val) => {
         setDeptFilter(val);
-        paginated.setFilters({ status: statusFilter || undefined, department_id: val ? Number(val) : undefined });
+        paginated.setFilters({ status: statusFilter || undefined, department_id: val || undefined });
       },
     },
   ];
@@ -184,7 +221,7 @@ export default function EmployeesPage() {
       render: (row) => fullName(row.first_name, row.last_name),
     },
     { id: 'email', label: 'Email', minWidth: 180 },
-    { id: 'phone', label: 'Phone', minWidth: 120 },
+    { id: 'phone', label: 'Phone', minWidth: 150, render: (row) => formatPhone(row.country_code, row.phone) },
     {
       id: 'department',
       label: 'Department',
@@ -227,7 +264,7 @@ export default function EmployeesPage() {
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Archive">
+          <Tooltip title="Mark inactive">
             <IconButton size="small" onClick={(e) => { e.stopPropagation(); openArchive(row); }} aria-label="Archive employee">
               <ArchiveIcon fontSize="small" />
             </IconButton>
@@ -244,30 +281,36 @@ export default function EmployeesPage() {
           <Alert severity="error">{formError}</Alert>
         </Grid>
       )}
-      {isCreate && (
-        <>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Employee Code" fullWidth required value={formData.employee_code ?? nextCode} disabled slotProps={{ input: { readOnly: true } }} helperText="Auto-assigned" />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Email" type="email" fullWidth required value={formData.email ?? ''} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} />
-          </Grid>
-        </>
-      )}
+      <Grid size={{ xs: 12 }}>
+        <TextField
+          label="Email"
+          type="email"
+          fullWidth
+          required={isCreate}
+          disabled={!isCreate}
+          value={isCreate ? formData.email ?? '' : selectedEmployee?.email ?? ''}
+          onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+          helperText={isCreate ? undefined : 'Email cannot be changed here'}
+        />
+      </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField label="First Name" fullWidth required value={formData.first_name ?? ''} onChange={(e) => setFormData((p) => ({ ...p, first_name: e.target.value }))} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField label="Last Name" fullWidth required value={formData.last_name ?? ''} onChange={(e) => setFormData((p) => ({ ...p, last_name: e.target.value }))} />
       </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField label="Phone" fullWidth required value={formData.phone ?? ''} onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))} />
-      </Grid>
+      <PhoneFields
+        countryCode={formData.country_code ?? ''}
+        phone={formData.phone ?? ''}
+        required={isCreate}
+        onCountryCodeChange={(value) => setFormData((p) => ({ ...p, country_code: value }))}
+        onPhoneChange={(value) => setFormData((p) => ({ ...p, phone: value }))}
+      />
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField label="Date of Birth" type="date" fullWidth slotProps={{ inputLabel: { shrink: true } }} value={formData.date_of_birth ?? ''} onChange={(e) => setFormData((p) => ({ ...p, date_of_birth: e.target.value }))} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField select label="Gender" fullWidth value={formData.gender ?? ''} onChange={(e) => setFormData((p) => ({ ...p, gender: e.target.value as 'MALE' | 'FEMALE' | 'OTHER' }))}>
+        <TextField select label="Gender" fullWidth required value={formData.gender ?? ''} onChange={(e) => setFormData((p) => ({ ...p, gender: e.target.value as 'MALE' | 'FEMALE' | 'OTHER' }))}>
           <MenuItem value="MALE">Male</MenuItem>
           <MenuItem value="FEMALE">Female</MenuItem>
           <MenuItem value="OTHER">Other</MenuItem>
@@ -277,12 +320,12 @@ export default function EmployeesPage() {
         <TextField label="Joining Date" type="date" fullWidth slotProps={{ inputLabel: { shrink: true } }} value={formData.joining_date ?? ''} onChange={(e) => setFormData((p) => ({ ...p, joining_date: e.target.value }))} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField select label="Department" fullWidth required value={formData.department_id ?? ''} onChange={(e) => { const id = Number(e.target.value); setFormData((p) => ({ ...p, department_id: id, designation_id: undefined })); loadDesignations(id); }}>
+        <TextField select label="Department" fullWidth required value={formData.department_id ?? ''} onChange={(e) => { const id = e.target.value; setFormData((p) => ({ ...p, department_id: id, designation_id: undefined })); loadDesignations(id); }}>
           {departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
         </TextField>
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField select label="Designation" fullWidth required value={formData.designation_id ?? ''} onChange={(e) => setFormData((p) => ({ ...p, designation_id: Number(e.target.value) }))}>
+        <TextField select label="Designation" fullWidth required value={formData.designation_id ?? ''} onChange={(e) => setFormData((p) => ({ ...p, designation_id: e.target.value }))}>
           {designations.map((d) => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
         </TextField>
       </Grid>
@@ -304,7 +347,7 @@ export default function EmployeesPage() {
       {isCreate && (
         <>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Password" type="password" fullWidth value={formData.password ?? ''} onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))} helperText="Initial login password" />
+            <TextField label="Initial Password" type="password" fullWidth required value={formData.password ?? ''} onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))} helperText="At least 8 characters; the employee must change it at first login." />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField select label="Role" fullWidth value={formData.role ?? 'EMPLOYEE'} onChange={(e) => setFormData((p) => ({ ...p, role: e.target.value as 'HR' | 'MANAGER' | 'EMPLOYEE' }))}>
@@ -390,7 +433,7 @@ export default function EmployeesPage() {
               ['Employee Code', selectedEmployee.employee_code],
               ['Name', fullName(selectedEmployee.first_name, selectedEmployee.last_name)],
               ['Email', selectedEmployee.email],
-              ['Phone', selectedEmployee.phone],
+              ['Phone', formatPhone(selectedEmployee.country_code, selectedEmployee.phone)],
               ['Gender', selectedEmployee.gender],
               ['Date of Birth', formatDate(selectedEmployee.date_of_birth)],
               ['Department', selectedEmployee.department?.name ?? '—'],
@@ -416,9 +459,9 @@ export default function EmployeesPage() {
       {/* Archive Dialog */}
       <ConfirmDialog
         open={archiveDialog.isOpen}
-        title="Archive Employee"
-        message={`Archive ${selectedEmployee ? fullName(selectedEmployee.first_name, selectedEmployee.last_name) : ''}? They will be moved to Former Employees.`}
-        confirmLabel="Archive"
+        title="Mark Employee Inactive"
+        message={`Mark ${selectedEmployee ? fullName(selectedEmployee.first_name, selectedEmployee.last_name) : ''} as inactive? Their employee record and related history will be kept.`}
+        confirmLabel="Mark Inactive"
         confirmColor="error"
         isLoading={formLoading}
         error={formError}

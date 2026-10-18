@@ -5,4 +5,3 @@ export { departmentApi } from './department.api';
 export { designationApi } from './designation.api';
 export { leaveApi } from './leave.api';
 export { projectApi } from './project.api';
-export { formerEmployeeApi } from './formerEmployee.api';

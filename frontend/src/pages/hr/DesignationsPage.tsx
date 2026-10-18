@@ -75,7 +75,7 @@ export default function DesignationsPage() {
       <Grid size={{ xs: 12 }}><TextField label="Name" fullWidth required value={formData.name ?? ''} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} /></Grid>
       <Grid size={{ xs: 12 }}><TextField label="Description" fullWidth multiline rows={2} value={formData.description ?? ''} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} /></Grid>
       <Grid size={{ xs: 12 }}>
-        <TextField select label="Department" fullWidth required value={formData.department_id ?? ''} onChange={(e) => setFormData((p) => ({ ...p, department_id: Number(e.target.value) }))}>
+        <TextField select label="Department" fullWidth required value={formData.department_id ?? ''} onChange={(e) => setFormData((p) => ({ ...p, department_id: e.target.value }))}>
           {departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
         </TextField>
       </Grid>

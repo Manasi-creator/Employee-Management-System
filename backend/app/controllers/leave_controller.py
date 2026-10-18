@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -9,6 +10,7 @@ from app.controllers.api_utils import (
     commit_or_conflict,
     enum_from_name,
     enum_value,
+    find_by_public_id,
     page_bounds,
     paginate,
 )
@@ -25,7 +27,7 @@ router = APIRouter(prefix="/leaves", tags=["Leaves"])
 
 def leave_type_out(leave_type: LeaveType) -> dict:
     return {
-        "id": leave_type.id,
+        "id": leave_type.public_id,
         "name": leave_type.name,
         "max_days": leave_type.annual_balance,
     }
@@ -33,9 +35,9 @@ def leave_type_out(leave_type: LeaveType) -> dict:
 
 def leave_out(request: LeaveRequest) -> dict:
     return {
-        "id": request.id,
-        "employee_id": request.employee_id or 0,
-        "leave_type_id": request.leave_type_id,
+        "id": request.public_id,
+        "employee_id": request.employee.public_id if request.employee else None,
+        "leave_type_id": request.leave_type.public_id,
         "leave_type": leave_type_out(request.leave_type),
         "start_date": request.start_date.isoformat(),
         "end_date": request.end_date.isoformat(),
@@ -44,7 +46,7 @@ def leave_out(request: LeaveRequest) -> dict:
         "status": enum_value(request.status).upper(),
         "remarks": request.approver_remarks,
         "employee": employee_summary_out(request.employee),
-        "reviewed_by": request.approved_by,
+        "reviewed_by": request.approver.public_id if request.approver else None,
         "created_at": request.created_at.isoformat(),
         "updated_at": request.updated_at.isoformat(),
     }
@@ -110,13 +112,13 @@ def apply_for_leave(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No employee profile is linked to this account")
     if body.end_date < body.start_date:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "end_date must not be before start_date")
-    leave_type = db.get(LeaveType, body.leave_type_id)
+    leave_type = find_by_public_id(db, LeaveType, body.leave_type_id)
     if leave_type is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Leave type not found")
     days = (body.end_date - body.start_date).days + 1
     request = LeaveRequest(
         employee_id=user.employee.id,
-        leave_type_id=body.leave_type_id,
+        leave_type_id=leave_type.id,
         start_date=body.start_date,
         end_date=body.end_date,
         number_of_days=Decimal(days),
@@ -130,11 +132,11 @@ def apply_for_leave(
 
 @router.post("/{leave_id}/cancel")
 def cancel_leave(
-    leave_id: int,
+    leave_id: UUID,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    request = db.scalar(select(LeaveRequest).where(LeaveRequest.id == leave_id))
+    request = db.scalar(select(LeaveRequest).where(LeaveRequest.public_id == str(leave_id)))
     if request is None or request.employee_id != getattr(user.employee, "id", None):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Leave request not found")
     if request.status != LeaveStatus.pending:
@@ -180,7 +182,7 @@ def list_manager_leaves(
 
 @router.post("/{leave_id}/action")
 def action_on_leave(
-    leave_id: int,
+    leave_id: UUID,
     body: LeaveAction,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -188,7 +190,7 @@ def action_on_leave(
     request = db.scalar(
         select(LeaveRequest)
         .options(joinedload(LeaveRequest.employee).joinedload(Employee.user))
-        .where(LeaveRequest.id == leave_id)
+        .where(LeaveRequest.public_id == str(leave_id))
     )
     if request is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Leave request not found")
@@ -211,16 +213,16 @@ def action_on_leave(
     request.approver_remarks = body.remarks
     request.approved_at = datetime.utcnow()
     commit_or_conflict(db)
-    return leave_out(db.scalar(_request_query().where(LeaveRequest.id == leave_id)))
+    return leave_out(db.scalar(_request_query().where(LeaveRequest.id == request.id)))
 
 
 @router.get("/{leave_id}")
 def get_leave(
-    leave_id: int,
+    leave_id: UUID,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    request = db.scalar(_request_query().where(LeaveRequest.id == leave_id))
+    request = db.scalar(_request_query().where(LeaveRequest.public_id == str(leave_id)))
     if request is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Leave request not found")
     if user.role == Role.hr:
