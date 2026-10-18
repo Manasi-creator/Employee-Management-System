@@ -15,10 +15,11 @@ import EditIcon from '@mui/icons-material/EditOutlined';
 import SaveIcon from '@mui/icons-material/SaveOutlined';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, LoadingSpinner, StatusChip } from '../../components';
+import { PageHeader, LoadingSpinner, StatusChip, PhoneFields } from '../../components';
 import { useAuth } from '../../context';
 import { employeeApi } from '../../api';
 import type { Employee } from '../../types';
+import { getErrorMessage } from '../../utils';
 
 export default function ManagerProfilePage() {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export default function ManagerProfilePage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
+    country_code: '',
     phone: '',
     address: '',
   });
@@ -40,6 +42,7 @@ export default function ManagerProfilePage() {
       const res = await employeeApi.getMyProfile();
       setProfile(res.data);
       setFormData({
+        country_code: res.data.country_code || '',
         phone: res.data.phone || '',
         address: res.data.address || '',
       });
@@ -58,12 +61,19 @@ export default function ManagerProfilePage() {
     try {
       setError(null);
       setSuccessMsg(null);
-      const res = await employeeApi.updateMyProfile(formData);
+      const updateData: { address: string; phone?: string; country_code?: string } = {
+        address: formData.address,
+      };
+      if (formData.country_code || formData.phone !== profile?.phone) {
+        updateData.phone = formData.phone;
+        updateData.country_code = formData.country_code;
+      }
+      const res = await employeeApi.updateMyProfile(updateData);
       setProfile(res.data);
       setIsEditing(false);
       setSuccessMsg('Profile updated successfully.');
-    } catch {
-      setError('Failed to update profile.');
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -166,15 +176,13 @@ export default function ManagerProfilePage() {
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label="Email" value={profile?.email || ''} fullWidth disabled />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Phone Number"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    fullWidth
-                    disabled={!isEditing}
-                  />
-                </Grid>
+                <PhoneFields
+                  countryCode={formData.country_code}
+                  phone={formData.phone}
+                  disabled={!isEditing}
+                  onCountryCodeChange={(value) => setFormData({ ...formData, country_code: value })}
+                  onPhoneChange={(value) => setFormData({ ...formData, phone: value })}
+                />
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label="Department" value={profile?.department?.name || 'Engineering'} fullWidth disabled />
                 </Grid>

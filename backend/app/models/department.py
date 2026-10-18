@@ -1,9 +1,9 @@
 # app/models/department.py
 from sqlalchemy import BigInteger, String, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base, PrimaryKeyType, TimestampMixin, AuditMixin
+from app.db.base import Base, PrimaryKeyType, PublicIdMixin, TimestampMixin, AuditMixin
 
-class Department(Base, TimestampMixin, AuditMixin):
+class Department(Base, PublicIdMixin, TimestampMixin, AuditMixin):
     __tablename__ = "departments"
     id: Mapped[int] = mapped_column(PrimaryKeyType, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), unique=True)
@@ -12,7 +12,7 @@ class Department(Base, TimestampMixin, AuditMixin):
     designations: Mapped[list["Designation"]] = relationship(back_populates="department")
     employees: Mapped[list["Employee"]] = relationship(back_populates="department")
 
-class Designation(Base, TimestampMixin, AuditMixin):
+class Designation(Base, PublicIdMixin, TimestampMixin, AuditMixin):
     __tablename__ = "designations"
     id: Mapped[int] = mapped_column(PrimaryKeyType, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100))

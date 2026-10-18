@@ -28,7 +28,7 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
 ## 🔑 Key Features & Role Portals
 
 ### 🏢 HR Portal
-- **Employee Management:** Create and update employee profiles with auto-assigned non-editable employee codes (`EMP001`, `EMP002`, etc.), assign managers, and archive former employees.
+- **Employee Management:** Create and update employee profiles with auto-assigned employee codes (`EMP001`, `EMP002`, etc.), assign managers, and mark employees inactive. Inactive employees remain in the employee records and appear on the Archived Employees page.
 - **Organization Hierarchy:** Manage company departments and designation structures.
 - **Projects Oversight:** View all company projects and department assignments (read-only project view; management reserved for Managers).
 - **Leave Approvals:** Review and approve/reject leave requests submitted by Managers.
@@ -47,6 +47,10 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
 - **Mandatory First-Time Login:** Forces initial password change upon first authentication.
 - **Show/Hide Password Toggle:** Eye button toggle for viewing passwords across login and password reset forms.
 - **JWT Authorization Guards:** Route protection and backend endpoint authorization for all CRUD operations.
+- **Browser credential protection:** Login sets an `HttpOnly` cookie; JavaScript cannot read or persist the JWT. The browser sends the cookie with API requests.
+- **Database boundary:** Only FastAPI connects to the database. The browser receives API response data, never database credentials or connection details.
+- **Request flow:** The browser sends HTTPS requests to FastAPI. The backend validates input, authenticates and authorizes the user, runs service/ORM logic against the database, then returns an API response. Browser requests and responses are inherently visible to that browser, so frontend code and Vite environment variables must contain no secrets.
+- **Production settings:** Use `APP_ENV=production`, HTTPS, `AUTH_COOKIE_SECURE=true`, a unique random `JWT_SECRET` of at least 32 bytes, a non-root database account, and explicit CORS origins. API docs are disabled in production.
 
 ---
 
@@ -98,9 +102,12 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
 
    JWT_SECRET=your_super_secret_jwt_key_32_bytes_min
    JWT_ALGORITHM=HS256
-   ACCESS_TOKEN_EXPIRE_MINUTES=6000
+   ACCESS_TOKEN_EXPIRE_MINUTES=60
 
    CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+   APP_ENV=development
+   AUTH_COOKIE_SECURE=false
+   AUTH_COOKIE_SAMESITE=lax
    ```
    *Note: Ensure `ems_db` database exists in MySQL before proceeding.*
 
@@ -111,15 +118,18 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
    ```
 
 6. **Seed Initial Demo Data (Optional):**
+   Set a local-only initial password first. All seeded accounts require a password change at first login.
    ```bash
+   $env:EMS_SEED_INITIAL_PASSWORD = "choose-a-unique-password-of-at-least-12-characters"
    python -m scripts.seed
    ```
+   Seeded accounts include `hr@ems.com`, `fin.manager@ems.com`, and `asha@ems.com`. Use the password you set above; it is not stored in frontend code. Only run the seed script in development.
 
 7. **Start the Backend API Server:**
    ```bash
    python -m uvicorn app.main:app --reload --port 8000
    ```
-   The API will be live at `http://localhost:8000` with interactive Swagger docs at `http://localhost:8000/docs`.
+   The API will be live at `http://localhost:8000`; interactive Swagger docs are available at `http://localhost:8000/docs` in development only.
 
 ---
 
@@ -150,7 +160,7 @@ A complete Postman v2.1.0 collection is included in the project under `backend/p
 ### How to use:
 1. Open **Postman**.
 2. Click **Import** and select `backend/postman/EMS.postman_collection.json`.
-3. Use the `Login` request under **1. Authentication** — the collection script automatically extracts and sets `{{bearer_token}}` for all subsequent requests!
+3. Use the `Login` request under **1. Authentication**. Postman stores the HTTP-only session cookie and sends it with subsequent requests.
 
 ---
 

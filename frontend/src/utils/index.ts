@@ -52,7 +52,13 @@ export const isValidEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export const isValidPhone = (phone: string): boolean =>
-  /^[+]?[\d\s-]{7,15}$/.test(phone);
+  /^\d{10}$/.test(phone);
+
+export const isValidCountryCode = (countryCode: string): boolean =>
+  /^\+?[1-9]\d{0,2}$/.test(countryCode);
+
+export const formatPhone = (countryCode?: string | null, phone?: string | null): string =>
+  [countryCode, phone].filter(Boolean).join(' ');
 
 export const isDateBefore = (start: string, end: string): boolean =>
   dayjs(start).isBefore(dayjs(end)) || dayjs(start).isSame(dayjs(end));
@@ -63,18 +69,4 @@ export const getErrorMessage = (error: unknown): string => {
     return (error as { message: string }).message;
   }
   return 'An unexpected error occurred.';
-};
-
-/* ── Storage ─────────────────────────────────────────────────── */
-export const storage = {
-  getToken: (): string | null => localStorage.getItem('access_token'),
-  setToken: (token: string): void => localStorage.setItem('access_token', token),
-  removeToken: (): void => localStorage.removeItem('access_token'),
-  getUser: (): string | null => localStorage.getItem('user'),
-  setUser: (user: string): void => localStorage.setItem('user', user),
-  removeUser: (): void => localStorage.removeItem('user'),
-  clear: (): void => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-  },
 };

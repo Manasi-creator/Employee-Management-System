@@ -10,7 +10,7 @@ def login(db: Session, email: str, password: str) -> tuple[str, User]:
         raise PermissionError("Invalid email or password")   # same message for all cases
     user.last_login = datetime.now()
     db.commit()
-    return create_access_token(user.id, user.role.value), user
+    return create_access_token(user.public_id, user.role.value), user
 
 def change_password(db: Session, user: User, current: str, new: str) -> None:
     if not verify_password(current, user.password_hash):

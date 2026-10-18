@@ -1,11 +1,12 @@
 // ─── Auth & User ─────────────────────────────────────────────
 export type Role = 'HR' | 'MANAGER' | 'EMPLOYEE';
+export type PublicId = string;
 
 export interface User {
-  id: number;
+  id: PublicId;
   email: string;
   role: Role;
-  employee_id: number | null;
+  employee_id: PublicId | null;
   is_first_login: boolean;
   is_active: boolean;
 }
@@ -16,8 +17,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  token_type: string;
   user: User;
 }
 
@@ -32,23 +31,24 @@ export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE';
 
 export interface Employee {
-  id: number;
+  id: PublicId;
   employee_code: string;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
+  country_code?: string;
   date_of_birth: string;
   gender: Gender;
   address: string;
   skills: string;
   emergency_contact: string;
   joining_date: string;
-  department_id: number;
-  designation_id: number;
-  manager_id: number | null;
+  department_id: PublicId | null;
+  designation_id: PublicId | null;
+  manager_id: PublicId | null;
   status: EmployeeStatus;
-  user_id: number | null;
+  user_id: PublicId | null;
   department?: Department;
   designation?: Designation;
   manager?: EmployeeSummary;
@@ -57,7 +57,7 @@ export interface Employee {
 }
 
 export interface EmployeeSummary {
-  id: number;
+  id: PublicId;
   employee_code: string;
   first_name: string;
   last_name: string;
@@ -67,22 +67,23 @@ export interface EmployeeSummary {
 }
 
 export interface EmployeeCreateRequest {
-  employee_code: string;
+  employee_code?: string;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
+  country_code: string;
   date_of_birth: string;
   gender: Gender;
   address: string;
   skills: string;
   emergency_contact: string;
   joining_date: string;
-  department_id: number;
-  designation_id: number;
-  manager_id: number | null;
+  department_id: PublicId | null;
+  designation_id: PublicId | null;
+  manager_id: PublicId | null;
   status: EmployeeStatus;
-  password?: string;
+  password: string;
   role?: Role;
 }
 
@@ -90,20 +91,22 @@ export interface EmployeeUpdateRequest {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  country_code?: string;
   date_of_birth?: string;
-  gender?: Gender;
+  gender: Gender;
   address?: string;
   skills?: string;
   emergency_contact?: string;
   joining_date?: string;
-  department_id?: number;
-  designation_id?: number;
-  manager_id?: number | null;
+  department_id?: PublicId | null;
+  designation_id?: PublicId | null;
+  manager_id?: PublicId | null;
   status?: EmployeeStatus;
 }
 
 export interface ProfileUpdateRequest {
   phone?: string;
+  country_code?: string;
   address?: string;
   skills?: string;
   emergency_contact?: string;
@@ -111,7 +114,7 @@ export interface ProfileUpdateRequest {
 
 // ─── Department ──────────────────────────────────────────────
 export interface Department {
-  id: number;
+  id: PublicId;
   name: string;
   description: string;
   created_at: string;
@@ -127,10 +130,10 @@ export type DepartmentUpdateRequest = Partial<DepartmentCreateRequest>;
 
 // ─── Designation ─────────────────────────────────────────────
 export interface Designation {
-  id: number;
+  id: PublicId;
   name: string;
   description: string;
-  department_id: number;
+  department_id: PublicId;
   department?: Department;
   created_at: string;
   updated_at: string;
@@ -139,7 +142,7 @@ export interface Designation {
 export interface DesignationCreateRequest {
   name: string;
   description: string;
-  department_id: number;
+  department_id: PublicId;
 }
 
 export type DesignationUpdateRequest = Partial<DesignationCreateRequest>;
@@ -148,7 +151,7 @@ export type DesignationUpdateRequest = Partial<DesignationCreateRequest>;
 export type LeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 export interface LeaveType {
-  id: number;
+  id: PublicId;
   name: string;
   max_days: number;
 }
@@ -161,9 +164,9 @@ export interface LeaveBalance {
 }
 
 export interface LeaveRequest {
-  id: number;
-  employee_id: number;
-  leave_type_id: number;
+  id: PublicId;
+  employee_id: PublicId | null;
+  leave_type_id: PublicId;
   leave_type?: LeaveType;
   start_date: string;
   end_date: string;
@@ -172,13 +175,13 @@ export interface LeaveRequest {
   status: LeaveStatus;
   remarks: string | null;
   employee?: EmployeeSummary;
-  reviewed_by?: number | null;
+  reviewed_by?: PublicId | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface LeaveApplyRequest {
-  leave_type_id: number;
+  leave_type_id: PublicId;
   start_date: string;
   end_date: string;
   reason: string;
@@ -193,13 +196,13 @@ export interface LeaveActionRequest {
 export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED';
 
 export interface Project {
-  id: number;
+  id: PublicId;
   name: string;
   description: string;
   start_date: string;
   end_date: string;
   status: ProjectStatus;
-  created_by: number;
+  created_by: PublicId | null;
   members?: ProjectMember[];
   created_at: string;
   updated_at: string;
@@ -216,57 +219,17 @@ export interface ProjectCreateRequest {
 export type ProjectUpdateRequest = Partial<ProjectCreateRequest>;
 
 export interface ProjectMember {
-  id?: number;
-  project_id: number;
-  employee_id: number;
+  id?: PublicId;
+  project_id: PublicId;
+  employee_id: PublicId;
   project_role: string;
   assigned_at: string;
   employee?: EmployeeSummary;
 }
 
 export interface ProjectMemberAddRequest {
-  employee_id: number;
+  employee_id: PublicId;
   project_role: string;
-}
-
-// ─── Former Employee ─────────────────────────────────────────
-export interface FormerEmployee {
-  id: number;
-  employee_code: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  date_of_birth: string;
-  gender: Gender;
-  address: string;
-  skills: string;
-  emergency_contact: string;
-  joining_date: string;
-  leaving_date: string;
-  archived_at: string;
-  department_name: string;
-  designation_name: string;
-  manager_name: string | null;
-  project_history?: ProjectHistory[];
-  leave_history?: LeaveHistory[];
-}
-
-export interface ProjectHistory {
-  project_name: string;
-  project_role: string;
-  start_date: string;
-  end_date: string;
-  status: ProjectStatus;
-}
-
-export interface LeaveHistory {
-  leave_type: string;
-  start_date: string;
-  end_date: string;
-  days: number;
-  status: LeaveStatus;
-  reason: string;
 }
 
 // ─── Dashboard ───────────────────────────────────────────────
@@ -291,7 +254,7 @@ export interface ManagerDashboardData {
 }
 
 export interface ProjectSummary {
-  id: number;
+  id: PublicId;
   name: string;
   status: ProjectStatus;
   member_count: number;
@@ -319,8 +282,8 @@ export interface QueryParams {
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
   status?: string;
-  department_id?: number;
-  designation_id?: number;
+  department_id?: PublicId;
+  designation_id?: PublicId;
   [key: string]: string | number | boolean | undefined;
 }
 

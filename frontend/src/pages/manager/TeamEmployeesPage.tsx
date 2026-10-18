@@ -6,6 +6,7 @@ import PhoneIcon from '@mui/icons-material/PhoneOutlined';
 import { PageHeader, DataTable, SearchBar, StatusChip, FormDialog, LoadingSpinner } from '../../components';
 import type { Column } from '../../components';
 import { employeeApi } from '../../api';
+import { formatPhone } from '../../utils';
 import type { Employee } from '../../types';
 
 export default function TeamEmployeesPage() {
@@ -168,7 +169,7 @@ export default function TeamEmployeesPage() {
                       <PhoneIcon fontSize="inherit" /> Phone
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {selectedMember.phone || 'N/A'}
+                      {formatPhone(selectedMember.country_code, selectedMember.phone) || 'N/A'}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12 }}>

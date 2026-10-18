@@ -24,20 +24,17 @@ export const employeeApi = {
   getMyTeam: (params?: QueryParams) =>
     api.get<PaginatedResponse<Employee>>(`${EMPLOYEES_PREFIX}/my-team`, { params }),
 
-  getNextCode: () =>
-    api.get<{ employee_code: string }>(`${EMPLOYEES_PREFIX}/next-code`),
-
   /* ── CRUD ─────────────────────────────────────────────────── */
-  getById: (id: number) =>
+  getById: (id: string) =>
     api.get<Employee>(`${EMPLOYEES_PREFIX}/${id}`),
 
   create: (data: EmployeeCreateRequest) =>
     api.post<Employee>(EMPLOYEES_PREFIX, data),
 
-  update: (id: number, data: EmployeeUpdateRequest) =>
+  update: (id: string, data: EmployeeUpdateRequest) =>
     api.put<Employee>(`${EMPLOYEES_PREFIX}/${id}`, data),
 
-  archive: (id: number) =>
+  archive: (id: string) =>
     api.post<{ message: string }>(`${EMPLOYEES_PREFIX}/${id}/archive`),
 
   /* ── Profile (self) ───────────────────────────────────────── */
