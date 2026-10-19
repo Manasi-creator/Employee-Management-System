@@ -1,10 +1,5 @@
 import { useEffect, useCallback } from 'react';
 import { Grid, Box } from '@mui/material';
-import PeopleIcon from '@mui/icons-material/PeopleOutlined';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccountOutlined';
-import PersonIcon from '@mui/icons-material/PersonOutlined';
-import BusinessIcon from '@mui/icons-material/BusinessOutlined';
-import EventNoteIcon from '@mui/icons-material/EventNoteOutlined';
 import { PageHeader, StatCard, LoadingState, ErrorState } from '../../components';
 import { employeeApi } from '../../api';
 import { useApi } from '../../hooks';
@@ -42,46 +37,54 @@ export default function HRDashboard() {
     <Box>
       <PageHeader title="HR Dashboard" subtitle="Organization overview" />
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          mb: 4,
+          justifyContent: "center",
+          alignItems: "stretch",
+          width: "100%",
+          mx: 0,
+        }}
+      >
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
             title="Total Employees"
             value={data?.total_employees ?? 0}
-            icon={<PeopleIcon />}
             color="#4F5AE5"
           />
         </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
             title="Managers"
             value={data?.total_managers ?? 0}
-            icon={<SupervisorAccountIcon />}
             color="#059669"
           />
         </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
             title="Active Employees"
             value={data?.active_employees ?? 0}
-            icon={<PersonIcon />}
             color="#2563EB"
           />
         </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
             title="Departments"
             value={data?.total_departments ?? 0}
-            icon={<BusinessIcon />}
             color="#D97706"
           />
         </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
             title="Pending Leaves"
             value={data?.pending_manager_leaves ?? 0}
-            icon={<EventNoteIcon />}
             color="#DC2626"
-            subtitle="Manager leave requests"
           />
         </Grid>
       </Grid>
