@@ -84,7 +84,7 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
 
 3. **Install backend dependencies:**
    ```bash
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ```
 
 4. **Environment Configuration:**
@@ -92,7 +92,11 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
    ```powershell
    Copy-Item .env.example .env
    ```
-   Configure your MySQL credentials and JWT secret in `backend/.env`:
+   Generate a secure secret key for `JWT_SECRET`:
+   ```bash
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+   Configure your MySQL credentials and paste the generated JWT secret into `backend/.env`:
    ```env
    DB_HOST=localhost
    DB_PORT=3306
@@ -100,7 +104,7 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
    DB_PASSWORD=your_password
    DB_NAME=ems_db
 
-   JWT_SECRET=your_super_secret_jwt_key_32_bytes_min
+   JWT_SECRET=your_generated_jwt_secret_key_here
    JWT_ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=60
 
