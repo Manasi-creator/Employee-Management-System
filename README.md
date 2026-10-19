@@ -65,22 +65,28 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
 
 ### 1. Backend Setup
 
-1. **Navigate to the backend directory:**
+1. **Open a terminal at the repository root and navigate to the backend directory:**
    ```powershell
-   cd backend
+   Set-Location backend
    ```
+   Run the remaining backend commands from this `backend` directory.
 
 2. **Create and activate a Python virtual environment:**
    - **Windows (PowerShell):**
      ```powershell
      python -m venv .venv
      .\.venv\Scripts\Activate.ps1
+     python -c "import sys; print(sys.executable)"
      ```
+     If you already created a folder named `venv`, use `.\venv\Scripts\Activate.ps1` instead and skip creating `.venv`.
    - **macOS / Linux:**
      ```bash
      python3 -m venv .venv
      source .venv/bin/activate
+     python -c "import sys; print(sys.executable)"
      ```
+     If you already created a folder named `venv`, use `source venv/bin/activate` instead and skip creating `.venv`.
+   The environment folder name is your choice: `.venv` and `venv` work the same way. The prompt will show the folder name, such as `(.venv)` or `(venv)`. The Python path printed above should point inside that folder. Teammates may use different folder names; each person should activate their own environment before installing or running backend commands.
 
 3. **Install backend dependencies:**
    ```bash
@@ -88,15 +94,17 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
    ```
 
 4. **Environment Configuration:**
-   Copy the example environment file:
+   Create your local `.env` from the template. This command preserves an existing `.env`:
    ```powershell
-   Copy-Item .env.example .env
+   if (-not (Test-Path .env)) { Copy-Item .env.example .env }
    ```
+   On macOS/Linux, use `cp -n .env.example .env`.
+
    Generate a secure secret key for `JWT_SECRET`:
    ```bash
    python -c "import secrets; print(secrets.token_hex(32))"
    ```
-   Configure your MySQL credentials and paste the generated JWT secret into `backend/.env`:
+   Open `.env` in the current `backend` directory and replace the database password and `JWT_SECRET` placeholder with your local values. Keep `.env` private and do not commit it. The template already sets development mode, allows the Vite ports 5173 and 5174 on localhost, and configures cookies for local HTTP:
    ```env
    DB_HOST=localhost
    DB_PORT=3306
@@ -105,31 +113,43 @@ A full-stack, enterprise-grade Employee Management System designed for modern wo
    DB_NAME=ems_db
 
    JWT_SECRET=your_generated_jwt_secret_key_here
-   JWT_ALGORITHM=HS256
-   ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-   CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+   CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174
    APP_ENV=development
    AUTH_COOKIE_SECURE=false
    AUTH_COOKIE_SAMESITE=lax
    ```
-   *Note: Ensure `ems_db` database exists in MySQL before proceeding.*
+   `DB_USER` and `DB_PASSWORD` must match your MySQL account. If your local setup differs, update those values (and `DB_HOST`, `DB_PORT`, or `DB_NAME` as needed).
 
-5. **Run Alembic Migrations:**
-   Apply pending database schema migrations:
+   These settings are for local development:
+   - `APP_ENV=development` enables development behavior, including API documentation and local demo seeding.
+   - `CORS_ORIGINS` lists the frontend addresses allowed to make credentialed requests to the API. Keep the entries that match your frontend URL.
+   - `AUTH_COOKIE_SECURE=false` allows the login cookie over local HTTP. For production, set this to `true` and serve the app over HTTPS.
+   - `AUTH_COOKIE_SAMESITE=lax` controls when browsers send the login cookie with cross-site requests. Keep `lax` for local development; production deployments should use an appropriate cookie policy for their domain and HTTPS setup.
+   The login cookie is `HttpOnly`, so frontend JavaScript cannot read its token. Do not disable `HttpOnly` to troubleshoot login. For production, also set `APP_ENV=production`, use a strong unique `JWT_SECRET`, and configure explicit HTTPS `CORS_ORIGINS` as described in the Security & Access Control section above.
+
+5. **Create the MySQL database:**
+   Skip this step if you choose SQLite instead: in `.env`, comment out the `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` settings, then uncomment `DATABASE_URL=sqlite:///./ems.db`.
+   Start MySQL, then run this from a terminal. Enter your MySQL password when prompted:
+   ```powershell
+   mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ems_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+   ```
+   If you use a different MySQL account, replace `root`. If your MySQL installation does not provide the `mysql` command in your terminal, create a database named `ems_db` in MySQL Workbench instead. The database name must match `DB_NAME` in `.env`.
+
+6. **Run Alembic migrations:**
+   From the `backend` directory, with the virtual environment active, apply the schema migrations:
    ```bash
-   alembic upgrade head
+   python -m alembic upgrade head
    ```
 
-6. **Seed Initial Demo Data (Optional):**
-   Set a local-only initial password first. All seeded accounts require a password change at first login.
+7. **Seed initial demo data (optional):**
+   In the same terminal session, set a unique local-only initial password of at least 12 characters, then run the seed script. Seeded accounts require a password change at first login.
    ```bash
    $env:EMS_SEED_INITIAL_PASSWORD = "choose-a-unique-password-of-at-least-12-characters"
    python -m scripts.seed
    ```
-   Seeded accounts include `hr@ems.com`, `fin.manager@ems.com`, and `asha@ems.com`. Use the password you set above; it is not stored in frontend code. Only run the seed script in development.
+   The environment-variable command above is for Windows PowerShell. On macOS/Linux, use `export EMS_SEED_INITIAL_PASSWORD="choose-a-unique-password-of-at-least-12-characters"` instead. Seeded accounts include `hr@ems.com`, `fin.manager@ems.com`, and `asha@ems.com`; use the password you set above. Only run the seed script in development. If it prints `Already seeded`, existing users were left unchanged; rerunning the script does not reset their passwords.
 
-7. **Start the Backend API Server:**
+8. **Start the backend API server:**
    ```bash
    python -m uvicorn app.main:app --reload --port 8000
    ```
