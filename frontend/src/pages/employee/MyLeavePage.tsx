@@ -13,6 +13,7 @@ import { PageHeader, DataTable, StatusChip, FormDialog, LoadingSpinner } from '.
 import type { Column } from '../../components';
 import { leaveApi } from '../../api';
 import type { LeaveRequest, LeaveType, LeaveBalance } from '../../types';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function MyLeavePage() {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
@@ -56,6 +57,7 @@ export default function MyLeavePage() {
   useEffect(() => {
     fetchLeaveData();
   }, [fetchLeaveData]);
+  useRefreshOnMutation(fetchLeaveData);
 
   const handleApplySubmit = async () => {
     try {
@@ -182,7 +184,7 @@ export default function MyLeavePage() {
       </Grid>
 
       {/* Leave History Table */}
-      {loading ? (
+      {loading && leaves.length === 0 ? (
         <LoadingSpinner label="Loading leaves..." />
       ) : (
         <DataTable

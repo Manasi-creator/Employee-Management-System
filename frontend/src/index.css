@@ -28,6 +28,8 @@ body {
 
 #root {
   min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
 }
 
 /* ─── Scrollbar Styling ──────────────────────────────────────── */
@@ -58,7 +60,7 @@ body {
 /* ─── Utility Classes ────────────────────────────────────────── */
 @layer components {
   .page-container {
-    @apply p-6 max-w-screen-2xl mx-auto;
+    @apply w-full p-6 max-w-screen-2xl mx-auto;
   }
 
   .card-surface {
@@ -122,6 +124,44 @@ body {
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .page-container {
-    padding: 16px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  html,
+  body {
+    min-width: 320px;
+  }
+
+  .page-container {
+    padding: 12px;
+  }
+
+  .MuiDialog-paper {
+    width: calc(100% - 24px);
+    max-width: none !important;
+    margin: 12px;
+  }
+
+  .MuiDialogTitle-root {
+    padding: 16px 16px 12px;
+  }
+
+  .MuiDialogContent-root {
+    padding: 12px 16px 16px;
+  }
+
+  .MuiDialogActions-root {
+    padding: 8px 16px 16px;
+    flex-wrap: wrap;
+  }
+
+  .MuiDialogActions-root .MuiButton-root {
+    min-width: 0;
+  }
+
+  .MuiTablePagination-root {
+    overflow-x: auto;
   }
 }

@@ -45,7 +45,7 @@ export default function SearchBar({
           ),
         },
       }}
-      sx={{ minWidth: 260 }}
+      sx={{ width: '100%', minWidth: 0 }}
       aria-label="Search"
     />
   );

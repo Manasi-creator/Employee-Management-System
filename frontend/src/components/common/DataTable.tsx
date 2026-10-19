@@ -7,6 +7,8 @@ import {
   TableRow,
   TableSortLabel,
   Box,
+  Card,
+  CardContent,
   Pagination,
   Typography,
   Select,
@@ -68,7 +70,7 @@ export default function DataTable<T>({
   getRowKey,
   onRetry,
 }: DataTableProps<T>) {
-  if (isLoading) {
+  if (isLoading && rows.length === 0) {
     return <LoadingState message="Loading data…" />;
   }
 
@@ -88,51 +90,104 @@ export default function DataTable<T>({
 
   return (
     <Box className="table-container">
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {columns.map((col) => (
-                <TableCell
-                  key={col.id}
-                  align={col.align ?? 'left'}
-                  sx={{ minWidth: col.minWidth }}
-                >
-                  {col.sortable && onSort ? (
-                    <TableSortLabel
-                      active={sortBy === col.id}
-                      direction={sortBy === col.id ? sortOrder : 'asc'}
-                      onClick={() => handleSort(col.id)}
-                    >
-                      {col.label}
-                    </TableSortLabel>
-                  ) : (
-                    col.label
-                  )}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row, index) => (
-              <TableRow
-                key={getRowKey ? getRowKey(row) : index}
-                hover
-                onClick={() => onRowClick?.(row)}
-                sx={{ cursor: onRowClick ? 'pointer' : 'default' }}
-              >
+      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
                 {columns.map((col) => (
-                  <TableCell key={col.id} align={col.align ?? 'left'}>
-                    {col.render
-                      ? col.render(row)
-                      : String((row as Record<string, unknown>)[col.id] ?? '—')}
+                  <TableCell
+                    key={col.id}
+                    align={col.align ?? 'left'}
+                    sx={{ minWidth: col.minWidth }}
+                  >
+                    {col.sortable && onSort ? (
+                      <TableSortLabel
+                        active={sortBy === col.id}
+                        direction={sortBy === col.id ? sortOrder : 'asc'}
+                        onClick={() => handleSort(col.id)}
+                      >
+                        {col.label}
+                      </TableSortLabel>
+                    ) : (
+                      col.label
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {rows.map((row, index) => (
+                <TableRow
+                  key={getRowKey ? getRowKey(row) : index}
+                  hover
+                  onClick={() => onRowClick?.(row)}
+                  sx={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                >
+                  {columns.map((col) => (
+                    <TableCell key={col.id} align={col.align ?? 'left'}>
+                      {col.render
+                        ? col.render(row)
+                        : String((row as Record<string, unknown>)[col.id] ?? '—')}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+
+      <Box sx={{ display: { xs: 'grid', md: 'none' }, gap: 1.5, p: 1.5 }}>
+        {rows.map((row, index) => (
+          <Card
+            key={getRowKey ? getRowKey(row) : index}
+            variant="outlined"
+            onClick={() => onRowClick?.(row)}
+            sx={{ borderRadius: 2, cursor: onRowClick ? 'pointer' : 'default' }}
+          >
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              {columns.map((col, columnIndex) => {
+                const value = col.render
+                  ? col.render(row)
+                  : String((row as Record<string, unknown>)[col.id] ?? '—');
+                return (
+                  <Box
+                    key={col.id}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 2,
+                      py: columnIndex === 0 ? 0 : 1,
+                      borderTop: columnIndex === 0 ? 'none' : '1px solid',
+                      borderColor: 'divider',
+                      '&:last-child': { pb: 0 },
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ flexShrink: 0, fontWeight: 600 }}
+                    >
+                      {col.label}
+                    </Typography>
+                    <Box
+                      sx={{
+                        minWidth: 0,
+                        textAlign: col.align ?? 'right',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {value}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
 
       {(onPageChange || onPageSizeChange) && total > 0 && (
         <Box
@@ -146,9 +201,14 @@ export default function DataTable<T>({
             borderColor: 'divider',
             flexWrap: 'wrap',
             gap: 1,
+            '@media (max-width: 600px)': {
+              alignItems: 'stretch',
+              flexDirection: 'column',
+              px: 1.5,
+            },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography variant="body2" color="text.secondary">
               Rows per page:
             </Typography>
@@ -176,6 +236,7 @@ export default function DataTable<T>({
               onChange={(_, p) => onPageChange?.(p)}
               size="small"
               shape="rounded"
+              siblingCount={0}
             />
           )}
         </Box>

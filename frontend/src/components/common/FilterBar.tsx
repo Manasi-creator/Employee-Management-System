@@ -34,7 +34,11 @@ export default function FilterBar({ filters, onChange, onReset, children, sx }: 
       }}
     >
       {filters.map((filter) => (
-        <FormControl key={filter.id} size="small" sx={{ minWidth: 160 }}>
+        <FormControl
+          key={filter.id}
+          size="small"
+          sx={{ minWidth: { xs: '100%', sm: 160 }, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}
+        >
           <InputLabel id={`filter-${filter.id}-label`}>{filter.label}</InputLabel>
           <Select
             labelId={`filter-${filter.id}-label`}
