@@ -1,9 +1,39 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useLocation, useOutlet } from 'react-router-dom';
 import { Box, Toolbar } from '@mui/material';
 import { Sidebar, TopBar } from '../components/layout';
 import { useAuth } from '../context';
 import { DRAWER_WIDTH } from '../components/layout/Sidebar';
+
+function CachedOutlet() {
+  const { pathname } = useLocation();
+  const outlet = useOutlet();
+  const [cachedOutlets, setCachedOutlets] = useState<Map<string, ReactNode>>(
+    () => new Map(),
+  );
+
+  useEffect(() => {
+    setCachedOutlets((cached) => {
+      if (cached.has(pathname)) return cached;
+      const next = new Map(cached);
+      next.set(pathname, outlet);
+      return next;
+    });
+  }, [outlet, pathname]);
+
+  const outlets = new Map(cachedOutlets);
+  if (!outlets.has(pathname)) outlets.set(pathname, outlet);
+
+  return (
+    <>
+      {[...outlets].map(([routePath, routeOutlet]) => (
+        <div key={routePath} hidden={routePath !== pathname} aria-hidden={routePath !== pathname}>
+          {routeOutlet}
+        </div>
+      ))}
+    </>
+  );
+}
 
 export default function AppLayout() {
   const { role } = useAuth();
@@ -26,7 +56,7 @@ export default function AppLayout() {
       >
         <Toolbar sx={{ minHeight: '64px !important' }} />
         <Box className="page-container animate-fade-in">
-          <Outlet />
+          <CachedOutlet />
         </Box>
       </Box>
     </Box>
