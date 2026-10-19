@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Box, Grid, Card, CardContent, Typography, Button, Alert } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNoteOutlined';
 import FolderIcon from '@mui/icons-material/FolderOutlined';
@@ -8,6 +8,7 @@ import { PageHeader, StatCard, DataTable, StatusChip, LoadingSpinner } from '../
 import type { Column } from '../../components';
 import { employeeApi, leaveApi, projectApi } from '../../api';
 import type { EmployeeDashboardData, LeaveRequest, Project, Employee } from '../../types';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
@@ -18,28 +19,30 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        const [dashRes, profRes, leaveRes, projRes] = await Promise.all([
-          employeeApi.getEmployeeDashboard(),
-          employeeApi.getMyProfile(),
-          leaveApi.getMyLeaves({ page: 1, page_size: 5 }),
-          projectApi.getMyProjects({ page: 1, page_size: 5 }),
-        ]);
-        setDashData(dashRes.data);
-        setProfile(profRes.data);
-        setRecentLeaves(leaveRes.data.items);
-        setMyProjects(projRes.data.items);
-      } catch {
-        setError('Failed to load employee dashboard.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDashboard();
+  const fetchDashboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [dashRes, profRes, leaveRes, projRes] = await Promise.all([
+        employeeApi.getEmployeeDashboard(),
+        employeeApi.getMyProfile(),
+        leaveApi.getMyLeaves({ page: 1, page_size: 5 }),
+        projectApi.getMyProjects({ page: 1, page_size: 5 }),
+      ]);
+      setDashData(dashRes.data);
+      setProfile(profRes.data);
+      setRecentLeaves(leaveRes.data.items);
+      setMyProjects(projRes.data.items);
+    } catch {
+      setError('Failed to load employee dashboard.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchDashboard();
+  }, [fetchDashboard]);
+  useRefreshOnMutation(fetchDashboard);
 
   const leaveColumns: Column<LeaveRequest>[] = [
     {
@@ -58,7 +61,7 @@ export default function EmployeeDashboard() {
     },
   ];
 
-  if (loading) return <LoadingSpinner label="Loading Dashboard..." />;
+  if (loading && !dashData) return <LoadingSpinner label="Loading Dashboard..." />;
 
   const totalRemainingDays =
     dashData?.leave_balance?.reduce((sum, b) => sum + (b.remaining || 0), 0) ?? 0;

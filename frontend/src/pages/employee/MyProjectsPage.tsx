@@ -5,6 +5,7 @@ import { PageHeader, DataTable, SearchBar, StatusChip, FormDialog, LoadingSpinne
 import type { Column } from '../../components';
 import { projectApi } from '../../api';
 import type { Project, ProjectMember } from '../../types';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function MyProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -40,6 +41,7 @@ export default function MyProjectsPage() {
   useEffect(() => {
     fetchMyProjects();
   }, [fetchMyProjects]);
+  useRefreshOnMutation(fetchMyProjects);
 
   const handleViewTeam = async (p: Project) => {
     setSelectedProject(p);
@@ -96,7 +98,7 @@ export default function MyProjectsPage() {
         </Grid>
       </Grid>
 
-      {loading ? (
+      {loading && projects.length === 0 ? (
         <LoadingSpinner label="Loading my projects..." />
       ) : (
         <DataTable

@@ -49,6 +49,7 @@ export default function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           bgcolor: 'background.default',
           minHeight: '100vh',

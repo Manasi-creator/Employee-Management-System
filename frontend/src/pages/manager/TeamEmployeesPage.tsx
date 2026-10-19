@@ -8,6 +8,7 @@ import type { Column } from '../../components';
 import { employeeApi } from '../../api';
 import { formatPhone } from '../../utils';
 import type { Employee } from '../../types';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function TeamEmployeesPage() {
   const [team, setTeam] = useState<Employee[]>([]);
@@ -41,6 +42,7 @@ export default function TeamEmployeesPage() {
   useEffect(() => {
     fetchTeam();
   }, [fetchTeam]);
+  useRefreshOnMutation(fetchTeam);
 
   const handleView = (emp: Employee) => {
     setSelectedMember(emp);
@@ -93,7 +95,7 @@ export default function TeamEmployeesPage() {
         </Grid>
       </Grid>
 
-      {loading ? (
+      {loading && team.length === 0 ? (
         <LoadingSpinner label="Loading team..." />
       ) : (
         <DataTable

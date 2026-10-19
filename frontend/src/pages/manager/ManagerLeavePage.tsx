@@ -19,6 +19,7 @@ import { PageHeader, DataTable, StatusChip, FormDialog, LoadingSpinner } from '.
 import type { Column } from '../../components';
 import { leaveApi } from '../../api';
 import type { LeaveRequest, LeaveType, LeaveBalance } from '../../types';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function ManagerLeavePage() {
   const [tabIndex, setTabIndex] = useState(0);
@@ -94,12 +95,17 @@ export default function ManagerLeavePage() {
     }
   }, [myPage]);
 
+  const refreshLeaveData = useCallback(async () => {
+    await Promise.all([fetchTeamLeaves(), fetchMyLeaves()]);
+  }, [fetchTeamLeaves, fetchMyLeaves]);
+
   useEffect(() => {
     setLoading(true);
     Promise.all([fetchTypes(), fetchTeamLeaves(), fetchMyLeaves()]).finally(() => {
       setLoading(false);
     });
   }, [fetchTeamLeaves, fetchMyLeaves]);
+  useRefreshOnMutation(refreshLeaveData);
 
   const handleOpenAction = (leave: LeaveRequest, type: 'APPROVED' | 'REJECTED') => {
     setActionLeave(leave);

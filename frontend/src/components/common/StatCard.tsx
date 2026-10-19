@@ -13,13 +13,13 @@ interface StatCardProps {
 export default function StatCard({ title, value, icon, subtitle, color = '#4F5AE5', sx }: StatCardProps) {
   return (
     <Card sx={{ height: '100%', ...sx }}>
-      <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 }, '&:last-child': { pb: { xs: 2, sm: 3 } } }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Box>
             <Typography variant="overline" color="text.secondary">
               {title}
             </Typography>
-            <Typography variant="h2" sx={{ mt: 0.5, color: 'text.primary' }}>
+            <Typography variant="h2" sx={{ mt: 0.5, color: 'text.primary', fontSize: { xs: '1.35rem', sm: '1.5rem' } }}>
               {value}
             </Typography>
             {subtitle && (

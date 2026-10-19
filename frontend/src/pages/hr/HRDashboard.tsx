@@ -30,7 +30,7 @@ export default function HRDashboard() {
     execute();
   }, [execute]);
 
-  if (isLoading) return <LoadingState fullPage message="Loading dashboard…" />;
+  if (isLoading && !data) return <LoadingState fullPage message="Loading dashboard…" />;
   if (error) return <ErrorState message={error} onRetry={() => execute()} />;
 
   return (

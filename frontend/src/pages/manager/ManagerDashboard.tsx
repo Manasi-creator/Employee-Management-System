@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Box, Grid, Card, CardContent, Typography, Button, Divider, Alert } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/GroupsOutlined';
 import EventNoteIcon from '@mui/icons-material/EventNoteOutlined';
@@ -10,6 +10,7 @@ import { PageHeader, StatCard, DataTable, StatusChip, LoadingSpinner } from '../
 import type { Column } from '../../components';
 import { employeeApi, leaveApi } from '../../api';
 import type { ManagerDashboardData, LeaveRequest } from '../../types';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function ManagerDashboard() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function ManagerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const [dashRes, leaveRes] = await Promise.all([
@@ -32,11 +33,12 @@ export default function ManagerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    void fetchDashboardData();
+  }, [fetchDashboardData]);
+  useRefreshOnMutation(fetchDashboardData);
 
   const columns: Column<LeaveRequest>[] = [
     {
@@ -62,7 +64,7 @@ export default function ManagerDashboard() {
     },
   ];
 
-  if (loading) return <LoadingSpinner label="Loading Manager Dashboard..." />;
+  if (loading && !data) return <LoadingSpinner label="Loading Manager Dashboard..." />;
 
   return (
     <Box>

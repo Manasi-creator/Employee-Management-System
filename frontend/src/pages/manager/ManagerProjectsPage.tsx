@@ -26,6 +26,7 @@ import { projectApi, employeeApi } from '../../api';
 import type { Project, ProjectMember, Employee, ProjectStatus } from '../../types';
 import { getErrorMessage } from '../../utils';
 import { useAuth } from '../../context/AuthContext';
+import { useRefreshOnMutation } from '../../hooks';
 
 export default function ManagerProjectsPage() {
   const { role } = useAuth();
@@ -85,6 +86,7 @@ export default function ManagerProjectsPage() {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+  useRefreshOnMutation(fetchProjects);
 
   const handleOpenCreate = () => {
     setEditingProject(null);
@@ -300,7 +302,7 @@ export default function ManagerProjectsPage() {
         </Grid>
       </Grid>
 
-      {loading ? (
+      {loading && projects.length === 0 ? (
         <LoadingSpinner label="Loading projects..." />
       ) : (
         <DataTable

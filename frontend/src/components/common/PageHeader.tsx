@@ -18,6 +18,10 @@ export default function PageHeader({ title, subtitle, action, sx }: PageHeaderPr
         mb: 3,
         gap: 2,
         flexWrap: 'wrap',
+        '& h1': {
+          fontSize: { xs: '1.4rem', sm: '1.75rem' },
+          overflowWrap: 'anywhere',
+        },
         ...sx,
       }}
     >
@@ -31,7 +35,17 @@ export default function PageHeader({ title, subtitle, action, sx }: PageHeaderPr
           </Typography>
         )}
       </Box>
-      {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
+      {action && (
+        <Box
+          sx={{
+            flexShrink: 0,
+            width: { xs: '100%', sm: 'auto' },
+            '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+          }}
+        >
+          {action}
+        </Box>
+      )}
     </Box>
   );
 }

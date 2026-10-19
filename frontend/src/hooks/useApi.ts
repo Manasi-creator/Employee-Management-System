@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ApiError, QueryParams, PaginatedResponse } from '../types';
 import { getErrorMessage } from '../utils';
 import type { AxiosResponse } from 'axios';
+import { DATA_CHANGED_EVENT } from '../api/dataEvents';
 
 interface UseApiState<T> {
   data: T | null;
@@ -39,6 +40,14 @@ export function useApi<T>(
     },
     [apiCall],
   );
+
+  useEffect(() => {
+    const refresh = () => {
+      void execute().catch(() => undefined);
+    };
+    window.addEventListener(DATA_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(DATA_CHANGED_EVENT, refresh);
+  }, [execute]);
 
   const reset = useCallback(() => {
     setState({ data: null, isLoading: false, error: null });
@@ -109,6 +118,14 @@ export function usePaginatedApi<T>(
 
   const refresh = useCallback(async () => {
     await fetchData(params);
+  }, [fetchData, params]);
+
+  useEffect(() => {
+    const refreshData = () => {
+      void fetchData(params);
+    };
+    window.addEventListener(DATA_CHANGED_EVENT, refreshData);
+    return () => window.removeEventListener(DATA_CHANGED_EVENT, refreshData);
   }, [fetchData, params]);
 
   const updateParams = useCallback(

@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import type { ApiError } from '../types';
+import { notifyDataChanged } from './dataEvents';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
@@ -11,7 +12,13 @@ const api = axios.create({
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config.method?.toLowerCase();
+    if (method && method !== 'get' && !response.config.url?.startsWith('/auth/')) {
+      notifyDataChanged();
+    }
+    return response;
+  },
   (error: AxiosError<{ detail?: string | { msg: string }[] }>) => {
     const apiError: ApiError = {
       status: 0,
